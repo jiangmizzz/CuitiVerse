@@ -1,0 +1,110 @@
+.chatbox-back{
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2;
+    background-color: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chatbox-card{
+    width: 40%;
+    height: 80%;
+    background-color: white;
+    border-radius: 1em;
+    box-shadow: 0 2px 4px 0 rgba(50,50,50,0.2);
+    display: flex;
+    flex-direction: column;
+}
+.chatbox-header{
+    width: 100%;
+    box-sizing: border-box;
+    height: 3.5em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #d9d9d9;
+    padding: 0.2em 0.5em 0.2em 1em;
+}
+.chatbox-header span{
+    font-weight: bold;
+}
+.chatbox-header img:hover{
+    cursor: pointer;
+    border-radius: 2em;
+    opacity: 0.7;
+    filter: brightness(1.2);
+}
+
+.chatbox-list{
+    flex-grow: 1;
+    overflow-y: scroll;
+    padding: 0.5em 0.7em 0.5em 1.2em;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+.chatbox-input-area{
+    width: 100%;
+    padding: 0 1em 0.5em;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    border-radius: 1em;
+
+}
+/* 修改滚动条样式 */
+  ::-webkit-scrollbar {
+    width: 0.5em;
+  }
+  
+  ::-webkit-scrollbar-track {
+    display: none;
+    border-radius: 1em;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background-color: #b6b5b5;
+    border-radius: 1em;
+  }
+
+.chatbox-input-area div{
+    flex-grow: 1;
+    border: 1px solid #d9d9e3;
+    border-radius: 1.05em;
+    overflow: hidden;
+}
+.chatbox-input-area textarea{
+    appearance: none;
+    width: 100%;
+    border: none;
+    border-radius: 1.1em;
+    outline: none;
+    box-sizing: border-box;
+    resize: none; /* 防止用户调整 textarea 大小 */
+
+    font-size: 14px;
+    font-family: Söhne, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    height: calc(1.75rem + 14px);
+    scroll-behavior: smooth;
+    height: fit-content;
+    overflow-y: auto;
+    padding: 0.875rem 1rem;
+}
+.chatbox-input-area textarea::placeholder{
+    font-family: Söhne, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-size: 14px;
+}
+.chatbox-input-area img{
+    margin-left: 0.5em;
+    width: 1.5em;
+    height: 1.5em;
+    cursor: pointer;
+}
+.chatbox-input-area img:hover{
+    filter: brightness(0.7);
+}

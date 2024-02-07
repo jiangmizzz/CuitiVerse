@@ -1,0 +1,44 @@
+.msg-main{
+    width: 100%;
+    display: flex;
+}
+
+.msg-content{
+    /* flex-grow: 1; */
+    /* width: fit-content; */
+    font-size: 14px;
+    font-family: Söhne, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", sans-serif, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    line-height: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+
+    border-radius: 1em;
+    padding: 0.7em;
+}
+
+.msg-theme-bot{
+    margin-left: 0.5em;
+    background-color: rgb(223, 171, 137);
+    color:aliceblue;
+}
+.msg-theme-user{
+    margin-right: 0.5em;
+    background-color: #f0f0f0;
+}
+.msg-delete{
+    height: 1.5em;
+    object-fit: contain;
+    align-self: center;
+}
+.msg-delete:hover{
+    opacity: 0.7;
+}
+.msg-del-bot{
+    margin-left: 0.5em;
+    margin-right: 3.5em;
+}
+.msg-del-user{
+    margin-right: 0.5em;
+    margin-left: 3em;
+}

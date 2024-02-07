@@ -1,0 +1,139 @@
+body {
+  /* 避免横向溢出 */
+  overflow-x: hidden;
+  background-color: rgb(230, 226, 218);
+}
+button{
+  cursor: pointer;
+}
+.main{
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.app-header{
+  position: sticky;
+  top: 0px;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4em 0 1em;
+  background-color: black;
+}
+.app-logo{
+  display: flex;
+  margin: 0.5em 0;
+}
+.app-logo span{
+  margin-left: 0.4em;
+  line-height: 30px;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: rgb(207, 171, 137);
+}
+.app-chat:hover{
+  cursor: pointer;
+  filter: brightness(1.2);
+}
+.app-body{
+  height: 100%;
+  margin: 2em 4em;
+  flex-grow: 1;
+  display: grid;
+  grid-template-columns: 2fr 5fr;
+  column-gap: 2em;
+}
+
+.app-left{
+  min-width: 0;
+  width: 100%;
+  height: min-content;
+  border-radius: 5px;
+  border: 1px solid #dddddd;
+  display: flex;
+  flex-direction: column;
+}
+.app-canvas{
+  width: 100%;
+  background-color: #f0f0f0;
+}
+.app-left-menu{
+  display: flex;
+  flex-direction: column;
+}
+.app-left-menu-1{
+  margin: 0.4em 0;
+  height: 2.5em;
+  color: #f0f0f0;
+  background-color: #3e3e3e;
+}
+.app-left-menu-2{
+  display: grid;
+  /* grid-template-columns: repeat(3, 1fr); */
+  column-gap: 0.3em;
+  height: 5em;
+}
+.app-left-menu-2 > div{
+  border-radius: 3px;
+  background-color: white;
+  box-shadow: 0 2px 4px 0 rgba(50,50,50,0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.5em 1em;
+}
+.app-left-menu-2 > div > div{
+  font-weight: bold;
+  font-size: 1.1em;
+}
+.app-right{
+  position: sticky;
+  top: 50px;
+  z-index: 1;
+  height: calc(100vh - 112px);
+
+  min-width: 0;
+  background-color: rgb(244, 244, 244);
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  border-radius: 5px;
+  /* box-sizing: border-box; */
+  border: 1px solid #dddddd;
+}
+.app-right-menu{
+  height: 2.5em;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1em;
+  align-items: center;
+  border-bottom: 1px solid #918f8f;
+  background-color: rgb(219, 216, 216)
+}
+.app-right-edit{
+  margin-right: 0.5em;
+}
+.app-right-edit span{
+  font-weight: bold;
+}
+.app-right-body{
+  flex-grow: 1;
+  height: 100%;
+  /* height: 100%; */
+  overflow-y: scroll;
+  padding: 0.3em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+.app-right-selected-item{
+  border: 1px dashed darkgoldenrod;
+  border-radius: 3px;
+}
+.app-right-default-item{
+  border:1px solid #dddddd;
+  border-radius: 3px;
+}
