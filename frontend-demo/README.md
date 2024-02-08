@@ -1,30 +1,30 @@
-# React + TypeScript + Vite
+# frontend-demo
+调研用 demo 部分的源代码，仅前端。
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 编译与运行
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+### 安装依赖 
+使用包管理器安装项目编译运行所需的依赖（yarn 和 npm 都可以）：
+```powershell
+$yarn install  #或者 npm install
 ```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+  
+### 添加 api_key 
+为保证调用 openai API 密钥的保密性，需要在本地自行配置 api_key，配置方法如下：
+1. 在根目录下新建文件夹 config，并在其中新建 request.ts 文件；
+2. 在 request.ts 文件夹中以如下形式写入 API 配置：
+  ```TypeScript
+  const requestConfig = {
+    apiKey: "your_api_key",
+    organization: "your_organization_id",
+    baseURL: "your_base_url",
+    dangerouslyAllowBrowser: true,
+  };
+  export default requestConfig;
+   ```
+  
+### 运行
+在终端以开发环境运行源代码，可在 localhost 中访问对应的网页内容：
+```powershell
+$yarn run dev #或者 npm run dev
+```
