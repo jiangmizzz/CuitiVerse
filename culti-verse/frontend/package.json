@@ -10,11 +10,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ant-design/charts": "^2.0.3",
+    "@chakra-ui/react": "^2.8.2",
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
+    "framer-motion": "^11.0.5",
+    "openai": "^4.26.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.21.3",
-    "zustand": "^4.5.0",
-    "openai": "^4.26.0"
+    "zustand": "^4.5.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
