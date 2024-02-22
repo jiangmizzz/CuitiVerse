@@ -1,0 +1,33 @@
+body {
+    /* 避免横向溢出 */
+    /* overflow-x: scroll; */
+    background-color: rgb(230, 226, 218);
+}
+.main{
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.app-header{
+    position: sticky;
+    top: 0px;
+    z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2em 0 1em;
+    background-color: black;
+}
+.app-logo{
+    display: flex;
+    margin: 0.3em 0;
+}
+.app-logo span{
+    margin-left: 0.4em;
+    line-height: 30px;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: rgb(207, 171, 137);
+}
