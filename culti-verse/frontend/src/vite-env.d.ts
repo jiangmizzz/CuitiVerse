@@ -7,6 +7,14 @@ export type eduType =
   | "master's degree"
   | "Ph.D.";
 
+export type normType =
+  | "Identity"
+  | "Homophony"
+  | "Homophonic pun"
+  | "Synonym"
+  | "Homograph"
+  | "Satire";
+
 export interface Settings {
   culture: string;
   age: number;
