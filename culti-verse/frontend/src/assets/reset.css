@@ -19,9 +19,11 @@ menu, nav, output, ruby, section, summary,
 time, mark, audio, video {
 	margin: 0;
 	padding: 0;
+	/* popover样式边框显示 */
 	/* border: 0; */
 	font-size: 100%;
-	font: inherit;
+	/* text的as属性生效 */
+	/* font: inherit; */ 
 	vertical-align: baseline;
 }
 /* HTML5 display-role reset for older browsers */
