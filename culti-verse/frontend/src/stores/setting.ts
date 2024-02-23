@@ -12,7 +12,7 @@ interface SettingState extends Settings {
 }
 
 export const useSettingStore = create<SettingState>()((set) => ({
-  culture: "America",
+  culture: "United States",
   age: 20,
   edu: "bachelor's degree",
   u1: 3,
@@ -31,7 +31,7 @@ export const useSettingStore = create<SettingState>()((set) => ({
   reset: () => {
     set(() => {
       return {
-        culture: "America",
+        culture: "United States",
         age: 20,
         edu: "bachelor's degree",
         u1: 3,
