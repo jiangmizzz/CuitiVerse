@@ -36,3 +36,19 @@ export interface Edge {
   to: string;
   value: number; //组合数量
 }
+export interface NoumenonType {
+  nid: string; //物像id
+  name: string; //物像名
+  metaphors: {
+    //该物像对应的喻体分布情况
+    type: normType;
+    count: number;
+  }[];
+}
+
+export interface MetaphorType {
+  mid: string; //标识喻体的唯一id
+  text: string; //喻体文本
+  //本体到喻体的转化类型（颜色编码）
+  normType: normType;
+}
