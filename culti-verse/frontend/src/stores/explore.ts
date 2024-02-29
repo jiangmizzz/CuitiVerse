@@ -7,7 +7,7 @@ import { MetaphorType, Settings, normType } from "../vite-env";
 interface ExploreTrack {
   noumenon: { nid: string; text: string }; //物像
   //喻体
-  metaphor: Omit<MetaphorType, "mid">;
+  metaphor: MetaphorType;
   foreignMetaphor: {
     //喻体转译
     text: string;
@@ -16,7 +16,7 @@ interface ExploreTrack {
 
 interface ExploreState extends ExploreTrack {
   setNoumenon: (newId: string, newValue: string) => void;
-  setMetaphor: (newValue: Omit<MetaphorType, "mid">) => void;
+  setMetaphor: (newValue: MetaphorType) => void;
   setForeign: (newValue: string) => void;
   generatePrompt: (
     track: ExploreTrack,
@@ -31,21 +31,36 @@ export const useExploreStore = create<ExploreState>()((set) => ({
     text: "",
   },
   metaphor: {
+    mid: "",
     text: "",
     normType: "Identity" satisfies normType,
   },
   foreignMetaphor: {
     text: "",
   },
+  //作为前置条件的量修改都会导致后面路径上的量被重置
   setNoumenon: (newId, newValue) => {
     set(() => {
-      return { noumenon: { nid: newId, text: newValue } };
+      return {
+        noumenon: { nid: newId, text: newValue },
+        metaphor: {
+          mid: "",
+          text: "",
+          normType: "Identity" satisfies normType,
+        },
+        foreignMetaphor: { text: "" },
+      };
     });
   },
   setMetaphor: (newValue) => {
     set(() => {
       return {
-        metaphor: { text: newValue.text, normType: newValue.normType },
+        metaphor: {
+          mid: newValue.mid,
+          text: newValue.text,
+          normType: newValue.normType,
+        },
+        foreignMetaphor: { text: "" },
       };
     });
   },
