@@ -71,7 +71,7 @@ export default function Noumenon(props: NoumenonProps) {
           cursor={"pointer"}
           onClick={props.select}
         >
-          <Heading as="h5" size="sm" textAlign={"center"}>
+          <Heading as="h6" size="xs" textAlign={"center"}>
             {props.name}
           </Heading>
         </Tag>
