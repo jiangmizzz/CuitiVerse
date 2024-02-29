@@ -15,6 +15,8 @@ export type normType =
   | "Homograph"
   | "Satire";
 
+export type optKey = "def" | "similar" | "gen_img" | "chat" | "trans";
+
 export interface Settings {
   culture: string;
   age: number;
@@ -45,10 +47,38 @@ export interface NoumenonType {
     count: number;
   }[];
 }
+export interface PaintingType {
+  pid: string; //画作id
+  name: string; //画作名
+  src: string; //画作链接
+  noumenons: (NoumenonType & {
+    positions: number[4][]; //选框位置列表，内层4个number表示起始点的x,y,w,h
+  })[];
+  combinations: (NoumenonType & {
+    //组合物象
+    elements: string[]; //组合中包含的nid
+  })[];
+}
 
 export interface MetaphorType {
   mid: string; //标识喻体的唯一id
   text: string; //喻体文本
   //本体到喻体的转化类型（颜色编码）
   normType: normType;
+}
+
+export type ExchangeItem = (
+  | {
+      opt: "def" | "gen_img";
+      content: string;
+    }
+  | {
+      opt: "chat" | "similar";
+      content: string[]; // chat形式时content为string[2], similar形式时为src列表
+    }
+) & { id: number; isLoading: boolean };
+
+export interface ExtensionMsg {
+  sender: "user" | "robot";
+  content: string;
 }
