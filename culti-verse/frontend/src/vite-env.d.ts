@@ -8,7 +8,7 @@ export type eduType =
   | "Ph.D.";
 
 export type normType =
-  | "Identity"
+  | "Iconic"
   | "Homophony"
   | "Homophonic pun"
   | "Synonym"
@@ -17,12 +17,24 @@ export type normType =
 
 export type optKey = "def" | "similar" | "gen_img" | "chat" | "trans";
 
+export type checkType = "Appropriate" | "Emotion" | "Inference";
+
 export interface Settings {
   culture: string;
   age: number;
   edu: eduType;
   u1: number;
   u2: number;
+}
+
+export interface ExploreTrack {
+  noumenon: { nid: string; text: string }; //物像
+  //喻体
+  metaphor: MetaphorType;
+  foreignMetaphor: {
+    //喻体转译
+    text: string;
+  };
 }
 
 export interface Node {
@@ -79,6 +91,8 @@ export type ExchangeItem = (
 ) & { id: number; isLoading: boolean };
 
 export interface ExtensionMsg {
+  id: number;
   sender: "user" | "robot";
   content: string;
+  isLoading: boolean;
 }
