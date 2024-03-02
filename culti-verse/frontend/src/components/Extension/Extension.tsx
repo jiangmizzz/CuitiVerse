@@ -9,56 +9,203 @@ import {
   Tag,
   Textarea,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import send from "../../assets/send_msg.svg";
+import { ExtensionMsg, Settings, checkType } from "../../vite-env";
+import Message from "./Message";
+import aiConfig from "../../../config/api-key";
+import OpenAI from "openai";
+import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import { useExploreStore } from "../../stores/explore";
+import { useSettingStore } from "../../stores/setting";
 
 export default function Extension() {
+  const exploreStore = useExploreStore();
+  const settingStore = useSettingStore();
+  const toast = useToast();
   const [inputMsg, setMsg] = useState<string>("");
   const [isWaiting, setWaiting] = useState<boolean>(false);
+  const [isProducing, setProducing] = useState<boolean>(false);
+  const [msgList, setMsgList] = useState<{
+    counter: number;
+    msgs: ExtensionMsg[];
+  }>({
+    counter: 0,
+    msgs: [],
+  });
 
-  //发送chat内容
-  function handleSend() {
-    setWaiting(true);
-    setTimeout(() => {
+  // 发送一条 chat 内容
+  async function handleSend() {
+    if (inputMsg !== "" && !isWaiting) {
+      setMsg("");
+      setWaiting(true);
+      setMsgList((prev) => {
+        return {
+          counter: prev.counter + 2,
+          msgs: [
+            ...prev.msgs,
+            ...([
+              {
+                id: prev.counter,
+                sender: "user",
+                content: inputMsg,
+                isLoading: false,
+              },
+              {
+                id: prev.counter + 1,
+                sender: "robot",
+                content: "",
+                isLoading: true,
+              },
+            ] satisfies ExtensionMsg[]),
+          ],
+        };
+      });
+      const openai = new OpenAI(aiConfig);
+      const res = await openai.chat.completions.create({
+        model: "gpt-4-turbo-preview",
+        messages: [
+          {
+            role: "system",
+            content: "This is the context of this conversation.",
+          },
+          ...msgList.msgs.map((msg) => {
+            return {
+              role: msg.sender == "user" ? "user" : "assistant",
+              content: msg.content,
+            } as ChatCompletionMessageParam;
+          }),
+          {
+            role: "system",
+            content:
+              "This is the question that the model needs to respond to truthfully: ",
+          },
+          {
+            role: "user",
+            content: inputMsg,
+          },
+        ],
+        n: 1,
+      });
+      const answer = res.choices[0].message.content!;
+      setMsgList((prev) => {
+        return {
+          counter: prev.counter + 1,
+          msgs: [
+            ...prev.msgs.slice(0, prev.msgs.length - 1),
+            {
+              id: prev.counter,
+              sender: "robot",
+              content: answer,
+              isLoading: false,
+            },
+          ],
+        };
+      });
       setWaiting(false);
-    }, 3000);
+    }
   }
-  //范式验证
-  function checkNorm(opt: string) {
-    switch (opt) {
-      case "Appropriate":
-        break;
-      case "Emotion":
-        break;
-      case "Inference":
-        break;
+
+  // 删除一条chat
+  function handleDelete(id: number) {
+    const index = msgList.msgs.findIndex((item) => item.id === id);
+    if (index >= 0) {
+      setMsgList((prev) => {
+        return {
+          counter: prev.counter,
+          msgs: prev.msgs.slice(0, index).concat(prev.msgs.slice(index + 1)),
+        };
+      });
+    }
+  }
+
+  // 文字翻译
+  async function translate(text: string): Promise<string> {
+    setProducing(true);
+    const openai = new OpenAI(aiConfig);
+    const res = await openai.chat.completions.create({
+      model: "gpt-4-turbo-preview",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Now you are a translator, required to translate content as accurately as possible.",
+        },
+        {
+          role: "user",
+          content: `Please translate the following text into the language of ${settingStore.culture}, and keep the format unchanged: ${text}`,
+        },
+      ],
+      n: 1,
+    });
+    const answer = res.choices[0].message.content!;
+    setProducing(false);
+    return answer;
+  }
+
+  //范式验证,将生成的文字填充/替换到输入框
+  async function checkNorm(opt: checkType) {
+    if (exploreStore.isCompleted()) {
+      const input = await translate(
+        exploreStore.generatePrompt({ ...(settingStore as Settings) }, opt)
+      );
+      setMsg(input);
+    } else {
+      toast({
+        title: "Incomplete norm",
+        description:
+          "You need to select an element, a symbol and one of its corresponding translation products to form a complete norm.",
+        status: "info",
+        duration: null,
+        position: "bottom-right",
+        isClosable: true,
+      });
     }
   }
 
   return (
-    <Flex className="extension-main app-item-main" direction={"column"}>
-      <VStack flex={1}></VStack>
+    <Flex
+      className="extension-main app-item-main"
+      direction={"column"}
+      w={"min-content"}
+    >
+      <VStack flex={1} overflow={"auto"} spacing={3} pb={2}>
+        {msgList.msgs.map((msg) => {
+          return (
+            <Message
+              key={msg.id}
+              id={msg.id}
+              sender={msg.sender}
+              content={msg.content}
+              isLoading={msg.isLoading}
+              delete={() => handleDelete(msg.id)}
+            />
+          );
+        })}
+      </VStack>
       <Box w={280}>
         <HStack mb={1}>
-          {["Appropriate", "Emotion", "Inference"].map((option) => {
-            return (
-              <Tag
-                key={option}
-                // boxShadow={"base"}
-                variant="outline"
-                _hover={{
-                  cursor: "pointer",
-                  boxShadow: "md",
-                }}
-                borderWidth={1}
-                colorScheme="black"
-                onClick={() => checkNorm(option)}
-              >
-                {option}
-              </Tag>
-            );
-          })}
+          {(["Appropriate", "Emotion", "Inference"] as checkType[]).map(
+            (option) => {
+              return (
+                <Tag
+                  key={option}
+                  variant="outline"
+                  _hover={{
+                    cursor: "pointer",
+                    boxShadow: "md",
+                  }}
+                  borderWidth={1}
+                  colorScheme="black"
+                  onClick={() => checkNorm(option)}
+                >
+                  {option}
+                </Tag>
+              );
+            }
+          )}
         </HStack>
         <InputGroup>
           <Textarea
@@ -69,20 +216,28 @@ export default function Extension() {
             minH={"6em"}
             placeholder="Message ChatGPT..."
             value={inputMsg}
+            isDisabled={isProducing}
+            cursor={isProducing ? "wait" : "default"}
             onChange={(e) => {
               setMsg(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
             }}
           />
           <InputRightElement m={1.5} mr={3}>
             <Flex align={"end"} style={{ height: "100%" }}>
               <IconButton
                 aria-label="sendMsg"
+                isDisabled={isWaiting || inputMsg === ""}
                 icon={
                   <Image
                     src={send}
                     objectFit={"contain"}
                     w={"1.5em"}
-                    cursor={isWaiting ? "not-allowed" : "pointer"}
                     onClick={handleSend}
                   />
                 }
