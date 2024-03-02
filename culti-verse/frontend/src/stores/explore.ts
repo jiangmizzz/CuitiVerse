@@ -2,30 +2,23 @@
  * 用于保存用户探索的路径
  */
 import { create } from "zustand";
-import { MetaphorType, Settings, normType } from "../vite-env";
-
-interface ExploreTrack {
-  noumenon: { nid: string; text: string }; //物像
-  //喻体
-  metaphor: MetaphorType;
-  foreignMetaphor: {
-    //喻体转译
-    text: string;
-  };
-}
+import {
+  ExploreTrack,
+  MetaphorType,
+  Settings,
+  checkType,
+  normType,
+} from "../vite-env";
 
 interface ExploreState extends ExploreTrack {
   setNoumenon: (newId: string, newValue: string) => void;
   setMetaphor: (newValue: MetaphorType) => void;
   setForeign: (newValue: string) => void;
-  generatePrompt: (
-    track: ExploreTrack,
-    background: Settings,
-    type: "Appropriate" | "Emotion" | "Inference"
-  ) => string;
+  isCompleted: () => boolean;
+  generatePrompt: (background: Settings, type: checkType) => string;
 }
 
-export const useExploreStore = create<ExploreState>()((set) => ({
+export const useExploreStore = create<ExploreState>()((set, get) => ({
   noumenon: {
     nid: "",
     text: "",
@@ -33,7 +26,7 @@ export const useExploreStore = create<ExploreState>()((set) => ({
   metaphor: {
     mid: "",
     text: "",
-    normType: "Identity" satisfies normType,
+    normType: "Iconic" satisfies normType,
   },
   foreignMetaphor: {
     text: "",
@@ -46,7 +39,7 @@ export const useExploreStore = create<ExploreState>()((set) => ({
         metaphor: {
           mid: "",
           text: "",
-          normType: "Identity" satisfies normType,
+          normType: "Iconic" satisfies normType,
         },
         foreignMetaphor: { text: "" },
       };
@@ -69,7 +62,17 @@ export const useExploreStore = create<ExploreState>()((set) => ({
       return { foreignMetaphor: { text: newValue } };
     });
   },
-  generatePrompt: (track, background, type) => {
+  isCompleted: () => {
+    if (
+      get().noumenon.nid != "" &&
+      get().metaphor.mid != "" &&
+      get().foreignMetaphor.text != ""
+    ) {
+      return true;
+    } else return false;
+  },
+  generatePrompt: (background, type) => {
+    const track = get() as ExploreTrack;
     //TODO:根据background和track设计验证的prompt
     return type + String(track) + String(background);
   },
