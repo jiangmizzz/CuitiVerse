@@ -18,32 +18,26 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { ExchangeItem, MetaphorType } from "../../vite-env";
-import { normColorMap, optIconMap } from "../../stores/maps";
+import { normColorMap, optIconMap, textBoxCfg } from "../../stores/maps";
 import deleteIcon from "../../assets/delete.svg";
 import refreshIcon from "../../assets/refresh.svg";
 import send from "../../assets/send_msg.svg";
 import { useExchangeStore } from "../../stores/exchange";
 import { useState } from "react";
-
-const btnCfg = {
-  cursor: "pointer",
-  _hover: { opacity: "0.7" },
-};
-
-const textBoxCfg = {
-  borderWidth: 1,
-  borderColor: "gray.200",
-  borderRadius: "md",
-  px: 2,
-  py: 1.5,
-  spacing: 1.5,
-  align: "start",
-};
+import OpenAI from "openai";
+import aiConfig from "../../../config/api-key";
+import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import ImgPreviewer from "../ImgPreviewer/ImgPreviewer";
 
 const textCfg = {
   fontSize: "xs",
   color: "gray.500",
   lineHeight: "1.2em",
+};
+
+const btnCfg = {
+  cursor: "pointer",
+  _hover: { opacity: "0.7" },
 };
 
 const spincfg = {
@@ -131,7 +125,16 @@ function ExchangeEntry(props: ExchangeEntryProps) {
               </VStack>
             ) : props.item.opt === "gen_img" ? (
               <AspectRatio ratio={1}>
-                <Image objectFit={"contain"} src={props.item.content} />
+                <ImgPreviewer
+                  imgSrc={props.item.content}
+                  trigger={
+                    <Image
+                      objectFit={"contain"}
+                      src={props.item.content}
+                      cursor={"pointer"}
+                    />
+                  }
+                />
               </AspectRatio>
             ) : props.item.opt === "chat" ? (
               <VStack spacing={1}>
@@ -181,13 +184,14 @@ interface MetaphorProps extends MetaphorType {
   isChatting: boolean; //chating state，显示对话输入框
   select: () => void;
 }
-//喻体对象
+//喻体对象组件
 export default function Metaphor(props: MetaphorProps) {
   const exchangeStore = useExchangeStore();
   const [inputMsg, setMsg] = useState<string>("");
   const [isWaiting, setWaiting] = useState<boolean>(false);
 
-  function handleRegenImg(id: number) {
+  //重新生成图片
+  async function handleRegenImg(id: number) {
     //加载态
     exchangeStore.replaceImg(props.mid, id, {
       opt: "gen_img",
@@ -195,18 +199,64 @@ export default function Metaphor(props: MetaphorProps) {
       isLoading: true,
     });
     //请求生成新的ai图片
-
+    const openai = new OpenAI(aiConfig);
+    const res = await openai.images.generate({
+      model: "dall-e-3",
+      //TODO:优化prompt，使生成的图片包含文化背景的考虑
+      prompt: `Please generate a schematic diagram of the image of the ${props.text} in the context of United State culture.`,
+      n: 1,
+      size: "1024x1024",
+    });
+    const imgUrl = res.data[0].url!;
     //再次更换
+    exchangeStore.replaceImg(props.mid, id, {
+      opt: "gen_img",
+      content: imgUrl,
+      isLoading: false,
+    });
   }
 
-  function handleSend() {
+  //发送信息，令回答尽可能简短
+  async function handleSend() {
     //加载态
-    exchangeStore.addLoading(props.mid, "chat", inputMsg);
     setMsg("");
     setWaiting(true);
-    setTimeout(() => {
-      setWaiting(false);
-    }, 3000);
+    exchangeStore.addLoading(props.mid, "chat", inputMsg);
+    const openai = new OpenAI(aiConfig);
+    const chatMsgs = props.history.filter((item) => {
+      item.opt === "chat";
+    });
+    const context: ChatCompletionMessageParam[] = [];
+    chatMsgs.forEach((msg) => {
+      context.push({ role: "user", content: msg.content[0] });
+      context.push({ role: "assistant", content: msg.content[1] });
+    });
+    const res = await openai.chat.completions.create({
+      model: "gpt-4-turbo-preview",
+      messages: [
+        {
+          role: "system",
+          content: "This is the context of this conversation.",
+        },
+        ...context,
+        {
+          role: "system",
+          content:
+            "This is the question that the model needs to respond to truthfully, and keep the responses concise and short as possible: ",
+        },
+        {
+          role: "user",
+          content: inputMsg,
+        },
+      ],
+      n: 1,
+    });
+    const answer = res.choices[0].message.content!;
+    exchangeStore.addItem(props.mid, {
+      opt: "chat",
+      content: [inputMsg, answer],
+    });
+    setWaiting(false);
   }
 
   return (
@@ -279,6 +329,12 @@ export default function Metaphor(props: MetaphorProps) {
                     pr={9}
                     size={"sm"}
                     onChange={(e) => setMsg(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }}
                   />
                   <InputRightElement>
                     <IconButton
@@ -287,13 +343,9 @@ export default function Metaphor(props: MetaphorProps) {
                       mt={-1.5}
                       bgColor={"transparent"}
                       isDisabled={isWaiting || inputMsg === ""}
+                      onClick={handleSend}
                       icon={
-                        <Image
-                          src={send}
-                          objectFit={"contain"}
-                          w={"1.5em"}
-                          onClick={handleSend}
-                        />
+                        <Image src={send} objectFit={"contain"} w={"1.5em"} />
                       }
                     />
                   </InputRightElement>
