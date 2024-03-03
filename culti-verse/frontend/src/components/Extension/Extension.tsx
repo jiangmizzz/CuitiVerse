@@ -15,11 +15,10 @@ import { useState } from "react";
 import send from "../../assets/send_msg.svg";
 import { ExtensionMsg, Settings, checkType } from "../../vite-env";
 import Message from "./Message";
-import aiConfig from "../../../config/api-key";
-import OpenAI from "openai";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { useExploreStore } from "../../stores/explore";
 import { useSettingStore } from "../../stores/setting";
+import { chat } from "../../utils/ai-requset";
 
 export default function Extension() {
   const exploreStore = useExploreStore();
@@ -63,33 +62,28 @@ export default function Extension() {
           ],
         };
       });
-      const openai = new OpenAI(aiConfig);
-      const res = await openai.chat.completions.create({
-        model: "gpt-4-turbo-preview",
-        messages: [
-          {
-            role: "system",
-            content: "This is the context of this conversation.",
-          },
-          ...msgList.msgs.map((msg) => {
-            return {
-              role: msg.sender == "user" ? "user" : "assistant",
-              content: msg.content,
-            } as ChatCompletionMessageParam;
-          }),
-          {
-            role: "system",
-            content:
-              "This is the question that the model needs to respond to truthfully: ",
-          },
-          {
-            role: "user",
-            content: inputMsg,
-          },
-        ],
-        n: 1,
-      });
-      const answer = res.choices[0].message.content!;
+      const context = [
+        {
+          role: "system",
+          content: "This is the context of this conversation.",
+        },
+        ...msgList.msgs.map((msg) => {
+          return {
+            role: msg.sender == "user" ? "user" : "assistant",
+            content: msg.content,
+          } as ChatCompletionMessageParam;
+        }),
+        {
+          role: "system",
+          content:
+            "This is the question that the model needs to respond to truthfully: ",
+        },
+        {
+          role: "user",
+          content: inputMsg,
+        },
+      ] as ChatCompletionMessageParam[];
+      const answer = await chat(context);
       setMsgList((prev) => {
         return {
           counter: prev.counter + 1,
@@ -124,23 +118,18 @@ export default function Extension() {
   // 文字翻译
   async function translate(text: string): Promise<string> {
     setProducing(true);
-    const openai = new OpenAI(aiConfig);
-    const res = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
-      messages: [
-        {
-          role: "system",
-          content:
-            "Now you are a translator, required to translate content as accurately as possible.",
-        },
-        {
-          role: "user",
-          content: `Please translate the following text into the language of ${settingStore.culture}, and keep the format unchanged: ${text}`,
-        },
-      ],
-      n: 1,
-    });
-    const answer = res.choices[0].message.content!;
+    const context = [
+      {
+        role: "system",
+        content:
+          "Now you are a translator, required to translate content as accurately as possible.",
+      },
+      {
+        role: "user",
+        content: `Please translate the following text into the language of ${settingStore.culture}, and keep the format unchanged: ${text}`,
+      },
+    ] as ChatCompletionMessageParam[];
+    const answer = await chat(context);
     setProducing(false);
     return answer;
   }

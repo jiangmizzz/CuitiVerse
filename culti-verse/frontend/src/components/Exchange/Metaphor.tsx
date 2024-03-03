@@ -24,10 +24,9 @@ import refreshIcon from "../../assets/refresh.svg";
 import send from "../../assets/send_msg.svg";
 import { useExchangeStore } from "../../stores/exchange";
 import { useState } from "react";
-import OpenAI from "openai";
-import aiConfig from "../../../config/api-key";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import ImgPreviewer from "../ImgPreviewer/ImgPreviewer";
+import { chat, generateImg } from "../../utils/ai-requset";
 
 const textCfg = {
   fontSize: "xs",
@@ -132,6 +131,7 @@ function ExchangeEntry(props: ExchangeEntryProps) {
                       objectFit={"contain"}
                       src={props.item.content}
                       cursor={"pointer"}
+                      title="Click to preview"
                     />
                   }
                 />
@@ -198,16 +198,10 @@ export default function Metaphor(props: MetaphorProps) {
       content: "",
       isLoading: true,
     });
-    //请求生成新的ai图片
-    const openai = new OpenAI(aiConfig);
-    const res = await openai.images.generate({
-      model: "dall-e-3",
-      //TODO:优化prompt，使生成的图片包含文化背景的考虑
-      prompt: `Please generate a schematic diagram of the image of the ${props.text} in the context of United State culture.`,
-      n: 1,
-      size: "1024x1024",
-    });
-    const imgUrl = res.data[0].url!;
+    //TODO:优化prompt，使生成的图片包含文化背景的考虑
+    const imgUrl = await generateImg(
+      `Please generate a schematic diagram of the image of the ${props.text} in the context of United State culture.`
+    );
     //再次更换
     exchangeStore.replaceImg(props.mid, id, {
       opt: "gen_img",
@@ -221,37 +215,32 @@ export default function Metaphor(props: MetaphorProps) {
     //加载态
     setMsg("");
     setWaiting(true);
-    exchangeStore.addLoading(props.mid, "chat", inputMsg);
-    const openai = new OpenAI(aiConfig);
-    const chatMsgs = props.history.filter((item) => {
-      item.opt === "chat";
-    });
+    const loadingId = exchangeStore.addLoading(props.mid, "chat", inputMsg);
+    //注意filter用法: 若无{}则不需写return，否则需要显式写return
+    const chatMsgs = props.history.filter((item) => item.opt === "chat");
     const context: ChatCompletionMessageParam[] = [];
     chatMsgs.forEach((msg) => {
       context.push({ role: "user", content: msg.content[0] });
       context.push({ role: "assistant", content: msg.content[1] });
     });
-    const res = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
-      messages: [
-        {
-          role: "system",
-          content: "This is the context of this conversation.",
-        },
-        ...context,
-        {
-          role: "system",
-          content:
-            "This is the question that the model needs to respond to truthfully, and keep the responses concise and short as possible: ",
-        },
-        {
-          role: "user",
-          content: inputMsg,
-        },
-      ],
-      n: 1,
-    });
-    const answer = res.choices[0].message.content!;
+    const messages = [
+      {
+        role: "system",
+        content: "This is the context of this conversation.",
+      },
+      ...context,
+      {
+        role: "system",
+        content:
+          "This is the question that the model needs to respond to truthfully, and keep the responses concise and short as possible (without using markdown syntax): ",
+      },
+      {
+        role: "user",
+        content: inputMsg,
+      },
+    ] as ChatCompletionMessageParam[];
+    const answer = await chat(messages);
+    exchangeStore.deleteItem(props.mid, loadingId);
     exchangeStore.addItem(props.mid, {
       opt: "chat",
       content: [inputMsg, answer],
@@ -311,7 +300,6 @@ export default function Metaphor(props: MetaphorProps) {
                 <ExchangeEntry
                   item={e}
                   delete={() => {
-                    console.log(props.mid, e.id);
                     exchangeStore.deleteItem(props.mid, e.id);
                   }}
                   regenImg={() => handleRegenImg(e.id)}
