@@ -10,7 +10,7 @@ import { normType, optKey } from "../vite-env";
 
 //喻体类型与颜色
 export const normColorMap = new Map<normType, string>([
-  ["Identity", "#dbbe9a"],
+  ["Iconic", "#dbbe9a"],
   ["Homophony", "#7292ac"],
   ["Homophonic pun", "#b67681"],
   ["Synonym", "#83a89a"],
@@ -26,3 +26,14 @@ export const optIconMap = new Map<optKey, string>([
   ["chat", chatIcon],
   ["trans", transformIcon],
 ]);
+
+//样式配置
+export const textBoxCfg = {
+  borderWidth: 1,
+  borderColor: "gray.200",
+  borderRadius: "md",
+  px: 2,
+  py: 1.5,
+  spacing: 1.5,
+  align: "start",
+};
