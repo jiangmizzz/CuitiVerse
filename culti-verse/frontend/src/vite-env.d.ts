@@ -61,7 +61,7 @@ export interface NoumenonType {
 }
 export interface PaintingType {
   pid: string; //画作id
-  name: string; //画作名
+  name: string[]; //画作名
   src: string; //画作链接
   noumenons: (NoumenonType & {
     positions: number[4][]; //选框位置列表，内层4个number表示起始点的x,y,w,h
@@ -95,4 +95,16 @@ export interface ExtensionMsg {
   sender: "user" | "robot";
   content: string;
   isLoading: boolean;
+}
+
+export interface ResponseType<T> {
+  success: boolean;
+  data: T;
+  errcode: number;
+  errmsg: string;
+}
+export interface cloudData {
+  value: number;
+  name: string;
+  nid: string;
 }
