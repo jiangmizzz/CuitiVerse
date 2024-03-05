@@ -9,6 +9,7 @@ import {
   Text,
   Tooltip,
   VStack,
+  useToast,
 } from "@chakra-ui/react";
 import { MetaphorType, normType, optKey } from "../../vite-env";
 import { normColorMap, optIconMap } from "../../stores/maps";
@@ -17,6 +18,11 @@ import { useEffect, useState } from "react";
 import Metaphor from "./Metaphor";
 import { useExploreStore } from "../../stores/explore";
 import { useExchangeStore } from "../../stores/exchange";
+import { chat, generateImg } from "../../utils/ai-requset";
+import { getFetcher } from "../../utils/request";
+import { useSettingStore } from "../../stores/setting";
+import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import useSWR from "swr";
 
 const vstackCfg = {
   flex: 1,
@@ -26,7 +32,7 @@ const vstackCfg = {
 };
 
 const normTypes: normType[] = [
-  "Identity",
+  "Iconic",
   "Homophony",
   "Homophonic pun",
   "Synonym",
@@ -43,24 +49,6 @@ const opts: {
   { key: "gen_img", op: "Generate AI Image", icon: optIconMap.get("gen_img")! },
   { key: "chat", op: "Chat", icon: optIconMap.get("chat")! },
   { key: "trans", op: "Cultural Transform", icon: optIconMap.get("trans")! },
-];
-
-const metaphorsData: MetaphorType[] = [
-  {
-    mid: "1",
-    text: "Zhuhou",
-    normType: "Homophony",
-  },
-  {
-    mid: "2",
-    text: "Monkey",
-    normType: "Identity",
-  },
-  {
-    mid: "3",
-    text: "Monkey King",
-    normType: "Synonym",
-  },
 ];
 
 // norm type sample
@@ -81,48 +69,111 @@ function TypeEntry(props: { type: normType }) {
 export default function Exchange() {
   const exploreStore = useExploreStore();
   const exchangeStore = useExchangeStore();
+  const settingStore = useSettingStore();
+  const toast = useToast();
   // 选中的喻体
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedM, setSelectedM] = useState<{
     mid: string;
+    text: string;
     isForeign: boolean;
-  }>({ mid: "", isForeign: false });
+  }>({ mid: "", text: "", isForeign: false });
   const [currentOpt, setCurrentOpt] = useState<optKey | null>(null);
   const [foreignM, setForeignM] = useState<MetaphorType[]>([]);
   const [isTransforming, setTransforming] = useState<boolean>(false);
+
+  //更新选中物像时清空selectedM
   useEffect(() => {
-    setSelectedM({ mid: "", isForeign: false });
+    setSelectedM({ mid: "", text: "", isForeign: false });
   }, [exploreStore.noumenon.nid]);
-  useEffect(() => {
-    if (!selectedM.isForeign) {
-      setForeignM([]);
-    }
-  }, [selectedM]);
+  //更新本土喻体时清空原转译内容，暂时注释掉
+  // useEffect(() => {
+  //   if (!selectedM.isForeign) {
+  //     setForeignM([]);
+  //   }
+  // }, [selectedM]);
+
+  // 获取喻体数据
+  const { data: metaphorsData, isLoading: metaphorsLoading } = useSWR<
+    MetaphorType[]
+  >(
+    // null,
+    exploreStore.noumenon.nid !== ""
+      ? `/pic/metaphors?nid=${exploreStore.noumenon.nid}&name=${exploreStore.noumenon.text}`
+      : null,
+    getFetcher<MetaphorType[]>
+  );
 
   // 操作分发
-  function optDispatch(key: optKey) {
+  async function optDispatch(key: optKey) {
     setCurrentOpt(key);
+    const mid = selectedM.mid;
     switch (key) {
-      case "def":
+      case "def": {
+        const loadingId = exchangeStore.addLoading(mid, "def", "");
+        const res = await getFetcher<string>(
+          `/pic/meaning?nid=${exploreStore.noumenon.nid}&mid=${mid}`
+        );
+        exchangeStore.deleteItem(mid, loadingId);
+        exchangeStore.addItem(mid, { opt: "def", content: res });
         break;
-      case "similar":
+      }
+      case "similar": {
+        toast({
+          title: "Please stay tuned...",
+          status: "info",
+          duration: 1500,
+          position: "top",
+          isClosable: true,
+        });
         break;
-      case "gen_img":
+      }
+      case "gen_img": {
+        const loadingId = exchangeStore.addLoading(mid, "gen_img", "");
+        const targetCulture = selectedM.isForeign
+          ? settingStore.culture
+          : "China";
+        const imgUrl = await generateImg(
+          settingStore.generateDesc() +
+            `Please generate a schematic diagram of the image of the ${selectedM.text} in the context of ${targetCulture} culture, which can make it easy for me to understand it.`
+        );
+        exchangeStore.deleteItem(mid, loadingId);
+        exchangeStore.addItem(mid, {
+          opt: "gen_img",
+          content: imgUrl,
+        });
         break;
+      }
       case "chat":
         currentOpt !== "chat" ? setCurrentOpt("chat") : setCurrentOpt(null);
         break;
-      case "trans":
-        setTransforming(true);
-        //获取喻体转译
-        setTimeout(() => {
+      case "trans": {
+        if (!selectedM.isForeign) {
+          setTransforming(true);
+          const context = [
+            {
+              role: "user",
+              content: `A symbol in the Chinese context may have multiple symbols with similar meanings in other cultural contexts. Now I need you to provide me with the symbolic word of ${selectedM.text} in the context of ${settingStore.culture} culture.`,
+            },
+            {
+              role: "user",
+              content: `The format of your answer is: return at least 1 word, if there are multiple symbolic words, just separate them with commas, use the language of the specified cultural background, and do not include any other redundant sentences.`,
+            },
+          ] as ChatCompletionMessageParam[];
+          const answer = await chat(context);
           setTransforming(false);
-          setForeignM([...metaphorsData]);
-        }, 2000);
-
+          setForeignM(
+            answer.split(",").map((text) => {
+              return {
+                mid: selectedM.mid + text,
+                text: text,
+              } satisfies MetaphorType;
+            })
+          );
+        }
         break;
+      }
     }
-    // console.log(key);
   }
 
   return (
@@ -160,6 +211,7 @@ export default function Exchange() {
                     />
                   }
                   isDisabled={
+                    isTransforming ||
                     selectedM.mid === "" ||
                     ((opt.key === "def" || opt.key === "similar") &&
                       selectedM.isForeign === true)
@@ -179,30 +231,48 @@ export default function Exchange() {
       >
         <VStack {...vstackCfg}>
           {exploreStore.noumenon.nid !== "" ? (
-            metaphorsData.map((m) => {
-              return (
-                <Metaphor
-                  key={m.mid}
-                  mid={m.mid}
-                  text={m.text}
-                  history={exchangeStore.exchangesMap.get(m.mid) ?? []}
-                  isSelected={exploreStore.metaphor.mid === m.mid}
-                  isActive={selectedM.mid === m.mid}
-                  isChatting={selectedM.mid === m.mid && currentOpt === "chat"}
-                  select={() => {
-                    //take in track
-                    exploreStore.setMetaphor({
-                      mid: m.mid,
-                      text: m.text,
-                      normType: m.normType,
-                    });
-                    //activate
-                    setSelectedM({ mid: m.mid, isForeign: false });
-                  }}
-                  normType={m.normType}
+            metaphorsLoading ? (
+              <Center h={"100%"}>
+                <Spinner
+                  speed="0.8s"
+                  color="gray.300"
+                  thickness="5px"
+                  size={"xl"}
                 />
-              );
-            })
+              </Center>
+            ) : (
+              (metaphorsData ?? []).map((m) => {
+                return (
+                  <Metaphor
+                    key={m.mid}
+                    mid={m.mid}
+                    text={m.text}
+                    history={exchangeStore.exchangesMap.get(m.mid) ?? []}
+                    isForeign={false}
+                    isSelected={exploreStore.metaphor.mid === m.mid}
+                    isActive={selectedM.mid === m.mid}
+                    isChatting={
+                      selectedM.mid === m.mid && currentOpt === "chat"
+                    }
+                    select={() => {
+                      //take in track
+                      exploreStore.setMetaphor({
+                        mid: m.mid,
+                        text: m.text,
+                        normType: m.normType,
+                      });
+                      //activate
+                      setSelectedM({
+                        mid: m.mid,
+                        text: m.text,
+                        isForeign: false,
+                      });
+                    }}
+                    normType={m.normType}
+                  />
+                );
+              })
+            )
           ) : (
             <Flex h={"100%"} color={"gray.300"} align={"center"}>
               No selected noumenon
@@ -212,25 +282,26 @@ export default function Exchange() {
         <VStack {...vstackCfg}>
           {foreignM.length !== 0 ? (
             foreignM.map((fm) => {
-              //TODO:换掉数据mock
-              const fmid = fm.mid + "foreign";
-              const text = fm.text + "'f";
               return (
                 <Metaphor
                   key={exploreStore.metaphor.mid + fm.mid}
-                  mid={fmid}
-                  text={text}
-                  history={exchangeStore.exchangesMap.get(fmid) ?? []}
+                  mid={fm.mid}
+                  text={fm.text}
+                  history={exchangeStore.exchangesMap.get(fm.mid) ?? []}
+                  isForeign={true}
                   isSelected={exploreStore.foreignMetaphor.text === fm.text}
-                  isActive={selectedM.mid === fmid}
-                  isChatting={selectedM.mid === fmid && currentOpt === "chat"}
+                  isActive={selectedM.mid === fm.mid}
+                  isChatting={selectedM.mid === fm.mid && currentOpt === "chat"}
                   select={() => {
                     //take in track
-                    exploreStore.setForeign(text);
+                    exploreStore.setForeign(fm.text);
                     //activate
-                    setSelectedM({ mid: fmid, isForeign: true });
+                    setSelectedM({
+                      mid: fm.mid,
+                      text: fm.text,
+                      isForeign: true,
+                    });
                   }}
-                  normType={fm.normType}
                 />
               );
             })

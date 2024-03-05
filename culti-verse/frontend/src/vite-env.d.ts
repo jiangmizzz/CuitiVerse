@@ -64,7 +64,7 @@ export interface PaintingType {
   name: string[]; //画作名
   src: string; //画作链接
   noumenons: (NoumenonType & {
-    positions: number[4][]; //选框位置列表，内层4个number表示起始点的x,y,w,h
+    positions: number[][]; //选框位置列表，内层4个number表示起始点的x,y,w,h
   })[];
   combinations: (NoumenonType & {
     //组合物象
@@ -76,7 +76,7 @@ export interface MetaphorType {
   mid: string; //标识喻体的唯一id
   text: string; //喻体文本
   //本体到喻体的转化类型（颜色编码）
-  normType: normType;
+  normType?: normType;
 }
 
 export type ExchangeItem = (

@@ -27,6 +27,7 @@ import { useState } from "react";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import ImgPreviewer from "../ImgPreviewer/ImgPreviewer";
 import { chat, generateImg } from "../../utils/ai-requset";
+import { useSettingStore } from "../../stores/setting";
 
 const textCfg = {
   fontSize: "xs",
@@ -179,6 +180,7 @@ function ExchangeEntry(props: ExchangeEntryProps) {
 
 interface MetaphorProps extends MetaphorType {
   history: ExchangeItem[];
+  isForeign: boolean;
   isSelected: boolean;
   isActive: boolean;
   isChatting: boolean; //chating state，显示对话输入框
@@ -187,6 +189,7 @@ interface MetaphorProps extends MetaphorType {
 //喻体对象组件
 export default function Metaphor(props: MetaphorProps) {
   const exchangeStore = useExchangeStore();
+  const settingStore = useSettingStore();
   const [inputMsg, setMsg] = useState<string>("");
   const [isWaiting, setWaiting] = useState<boolean>(false);
 
@@ -198,9 +201,10 @@ export default function Metaphor(props: MetaphorProps) {
       content: "",
       isLoading: true,
     });
-    //TODO:优化prompt，使生成的图片包含文化背景的考虑
+    const targetCulture = props.isForeign ? settingStore.culture : "China";
     const imgUrl = await generateImg(
-      `Please generate a schematic diagram of the image of the ${props.text} in the context of United State culture.`
+      settingStore.generateDesc() +
+        `Please generate a schematic diagram of the image of the ${props.text} in the context of ${targetCulture} culture, which can make it easy for me to understand it.`
     );
     //再次更换
     exchangeStore.replaceImg(props.mid, id, {
@@ -251,15 +255,17 @@ export default function Metaphor(props: MetaphorProps) {
   return (
     <VStack w={"100%"}>
       <Flex w={"90%"} align={"center"}>
-        <Box
-          w={3}
-          h={3}
-          mr={-3}
-          rounded={"full"}
-          position={"relative"}
-          right={1.5}
-          bgColor={normColorMap.get(props.normType)}
-        />
+        {props.normType && (
+          <Box
+            w={3}
+            h={3}
+            mr={-3}
+            rounded={"full"}
+            position={"relative"}
+            right={1.5}
+            bgColor={normColorMap.get(props.normType)}
+          />
+        )}
         <Tag
           w={"100%"}
           py={2.5}
