@@ -11,16 +11,20 @@ interface ExchangeState {
     mid: string,
     type: Exclude<optKey, "trans">,
     ask: string
+  ) => number;
+  addItem: (
+    mid: string,
+    item: Pick<ExchangeItem, Exclude<keyof ExchangeItem, "id" | "isLoading">>
   ) => void;
-  addItem: (mid: string, item: ExchangeItem) => void;
   deleteItem: (mid: string, id: number) => void;
   replaceImg: (mid: string, id: number, item: Omit<ExchangeItem, "id">) => void;
 }
 
-export const useExchangeStore = create<ExchangeState>()((set) => ({
+export const useExchangeStore = create<ExchangeState>()((set, get) => ({
   counter: 0,
   exchangesMap: new Map<string, ExchangeItem[]>([]),
   addLoading: (mid, type, ask) => {
+    const tmp = get().counter;
     set((prevState) => {
       if (!prevState.exchangesMap.has(mid)) {
         return {
@@ -77,17 +81,16 @@ export const useExchangeStore = create<ExchangeState>()((set) => ({
         };
       }
     });
+    return tmp;
   },
   addItem: (mid, item) => {
-    //清除上一个loading item (loading item只能在此处清除)
-    //然后再添加new item
     set((prevState) => {
       const lastMsgs = prevState.exchangesMap.get(mid)!;
       return {
         counter: prevState.counter + 1,
         exchangesMap: prevState.exchangesMap.set(mid, [
-          ...lastMsgs.slice(0, lastMsgs.length - 1),
-          { ...item, id: prevState.counter },
+          ...lastMsgs,
+          { ...item, id: prevState.counter, isLoading: false } as ExchangeItem,
         ]),
       };
     });
@@ -111,12 +114,13 @@ export const useExchangeStore = create<ExchangeState>()((set) => ({
     set((prevState) => {
       const lastMsgs = prevState.exchangesMap.get(mid)!;
       const index = lastMsgs.findIndex((item) => item.id === id);
+      const tmp = lastMsgs.slice(0, index);
       if (index !== -1) {
-        lastMsgs.slice(0, index).push({ ...item, id: id } as ExchangeItem);
+        tmp.push({ ...item, id: id } as ExchangeItem);
         return {
           exchangesMap: prevState.exchangesMap.set(
             mid,
-            lastMsgs.concat(lastMsgs.slice(index + 1))
+            tmp.concat(lastMsgs.slice(index + 1))
           ),
         };
       } else return {};

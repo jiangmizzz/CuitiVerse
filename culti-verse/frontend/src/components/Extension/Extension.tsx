@@ -13,7 +13,7 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import send from "../../assets/send_msg.svg";
-import { ExtensionMsg, Settings, checkType } from "../../vite-env";
+import { ExtensionMsg, checkType } from "../../vite-env";
 import Message from "./Message";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { useExploreStore } from "../../stores/explore";
@@ -137,8 +137,27 @@ export default function Extension() {
   //范式验证,将生成的文字填充/替换到输入框
   async function checkNorm(opt: checkType) {
     if (exploreStore.isCompleted()) {
+      let head =
+        "The translation path of traditional Chinese painting is: element (in a painting) --> symbol (in a certain way of rhetoric) --> foreign cultural symbol. ";
+      let tail: string = "\nQ: ";
+      if (opt === "Appropriate") {
+        head += `Now I need your help to determine whether the current translation path is appropriate for me.`;
+        tail += `Please help me determine whether the current translation path is appropriate for me.`;
+      } else if (opt === "Emotion") {
+        head += `Now I need your help to determine the emotional tendencies contained in the current translation path.`;
+        tail += `Please help me determine the emotional tendencies contained in the current translation path (make it easy for me to understand).`;
+      } else {
+        head += `Now I need you to help me think of more similar translation paths in Chinese paintings`;
+        tail += `Please help me think of more similar translation paths in Chinese paintings (make it suitable for my understanding).`;
+      }
       const input = await translate(
-        exploreStore.generatePrompt({ ...(settingStore as Settings) }, opt)
+        head +
+          `\nThe following are descriptions of current conditions` +
+          `\nBackground: ` +
+          settingStore.generateDesc() +
+          `\nTask: ` +
+          exploreStore.generateTrack() +
+          tail
       );
       setMsg(input);
     } else {
@@ -147,7 +166,7 @@ export default function Extension() {
         description:
           "You need to select an element, a symbol and one of its corresponding translation products to form a complete norm.",
         status: "info",
-        duration: null,
+        duration: 5000,
         position: "bottom-right",
         isClosable: true,
       });

@@ -2,20 +2,15 @@
  * 用于保存用户探索的路径
  */
 import { create } from "zustand";
-import {
-  ExploreTrack,
-  MetaphorType,
-  Settings,
-  checkType,
-  normType,
-} from "../vite-env";
+import { ExploreTrack, MetaphorType, normType } from "../vite-env";
 
 interface ExploreState extends ExploreTrack {
   setNoumenon: (newId: string, newValue: string) => void;
   setMetaphor: (newValue: MetaphorType) => void;
   setForeign: (newValue: string) => void;
   isCompleted: () => boolean;
-  generatePrompt: (background: Settings, type: checkType) => string;
+  //生成格式化的验证prompt
+  generateTrack: () => string;
 }
 
 export const useExploreStore = create<ExploreState>()((set, get) => ({
@@ -71,9 +66,8 @@ export const useExploreStore = create<ExploreState>()((set, get) => ({
       return true;
     } else return false;
   },
-  generatePrompt: (background, type) => {
+  generateTrack: () => {
     const track = get() as ExploreTrack;
-    //TODO:根据background和track设计验证的prompt
-    return type + String(track) + String(background);
+    return `The current translation path is: element: ${track.noumenon.text} --> symbol: ${track.metaphor.text}(way of rhetoric: ${track.metaphor.normType}) --> foreign symbol: ${track.foreignMetaphor.text}`;
   },
 }));
