@@ -3,6 +3,7 @@ import { TooltipComponent } from "echarts/components";
 import "echarts-wordcloud";
 import { useEffect } from "react";
 import { Box } from "@chakra-ui/react";
+import { cloudData } from "../../vite-env";
 
 //字体配色
 const fontColor = [
@@ -15,12 +16,6 @@ const fontColor = [
   "b0a7d7",
   "d7c3b8",
 ];
-
-interface cloudData {
-  value: number;
-  name: string;
-  nid: string;
-}
 
 export default function Cloud(props: {
   data: cloudData[];
