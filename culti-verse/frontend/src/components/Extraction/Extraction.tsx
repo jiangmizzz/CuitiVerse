@@ -11,113 +11,83 @@ import {
   StackDivider,
   Tooltip,
   VStack,
+  Image,
+  Center,
+  Spinner,
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Cloud from "./Cloud";
 import NetWork from "./Network";
-import { Edge, Node, normType } from "../../vite-env";
+import { Edge, Node, PaintingType } from "../../vite-env";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import Painting from "./Painting";
 import Noumenon from "./Noumenon";
 import { useExploreStore } from "../../stores/explore";
+import useSWR from "swr";
+import { getFetcher, origin } from "../../utils/request";
 
-const cloudData = [
-  { value: 50, name: "华为" },
-  { value: 30, name: "VIVO" },
-  { value: 29, name: "OPPO" },
-  { value: 28, name: "HONOR" },
-  { value: 27, name: "红米" },
-  { value: 26, name: "小米" },
-  { value: 25, name: "美图" },
-  { value: 24, name: "ONEPLUS" },
-  { value: 23, name: "魅族" },
-  { value: 22, name: "红手指" },
-  { value: 21, name: "SAMSUNG" },
-  { value: 20, name: "金立" },
-  { value: 16, name: "BLACKBERRY" },
-  { value: 15, name: "诺基亚" },
-  { value: 14, name: "锤子" },
-  { value: 13, name: "大疆" },
-  { value: 12, name: "361" },
-  { value: 11, name: "摩托罗拉" },
-  { value: 10, name: "联想" },
-  { value: 9, name: "玩家国度" },
-];
-const networkData: { nodes: Node[]; edges: Edge[] } = {
-  nodes: [
-    { id: "1", value: 2, label: "Algie" },
-    { id: "2", value: 31, label: "Alston" },
-    { id: "3", value: 12, label: "Barney" },
-    { id: "4", value: 16, label: "Coley" },
-    { id: "5", value: 17, label: "Grant" },
-    { id: "6", value: 15, label: "Langdon" },
-    { id: "7", value: 6, label: "Lee" },
-    { id: "8", value: 5, label: "Merlin" },
-    { id: "9", value: 30, label: "Mick" },
-    { id: "10", value: 18, label: "Tod" },
+//值得记录的写法+1
+type SimplePic = Pick<
+  PaintingType,
+  Exclude<keyof PaintingType, "noumenons" | "combinations">
+>;
+
+const picData1: PaintingType = {
+  pid: "14",
+  name: ["江帆亭", "Jiangfan Pavilion"],
+  src: "https://www.freeimg.cn/i/2024/02/26/65dc8760d517a.jpg",
+  noumenons: [
+    {
+      nid: "0",
+      name: "landscape",
+      positions: [
+        [
+          0.18494167923927307, 0.016178250312805176, 0.7066805958747864,
+          0.9711191654205322,
+        ],
+      ],
+      metaphors: [{ type: "Iconic", count: 1 }],
+    },
   ],
-  edges: [
-    { from: "2", to: "8", value: 3, title: "3 emails per week" },
-    { from: "2", to: "9", value: 5, title: "5 emails per week" },
-    { from: "2", to: "10", value: 1, title: "1 emails per week" },
-    { from: "4", to: "6", value: 8, title: "8 emails per week" },
-    { from: "5", to: "7", value: 2, title: "2 emails per week" },
-    { from: "4", to: "5", value: 1, title: "1 emails per week" },
-    { from: "9", to: "10", value: 2, title: "2 emails per week" },
-    { from: "2", to: "3", value: 6, title: "6 emails per week" },
-    { from: "3", to: "9", value: 4, title: "4 emails per week" },
-    { from: "5", to: "3", value: 1, title: "1 emails per week" },
-    { from: "2", to: "7", value: 4, title: "4 emails per week" },
-  ].map((edge) => {
-    return { ...edge, id: edge.from + "+" + edge.to };
-  }),
+  combinations: [],
 };
-const noumenonData = [
-  {
-    nid: "1",
-    name: "Monkey",
-    type: "single" as "single" | "combination",
-    metaphors: [
-      { type: "Identity", count: 1 },
-      { type: "Homophony", count: 1 },
-      { type: "Homophonic pun", count: 3 },
-      { type: "Synonym", count: 2 },
-      { type: "Homograph", count: 1 },
-      { type: "Satire", count: 1 },
-    ] as { type: normType; count: number }[],
-    positions: [
-      [1, 2, 3, 4],
-      [1, 2, 3, 4],
-    ],
-  },
-  {
-    nid: "2",
-    name: "Monkey / Bee ",
-    type: "combination" as "single" | "combination",
-    metaphors: [
-      { type: "Identity", count: 1 },
-      { type: "Homophony", count: 2 },
-      { type: "Homophonic pun", count: 0 },
-      { type: "Synonym", count: 2 },
-      { type: "Homograph", count: 3 },
-      { type: "Satire", count: 0 },
-    ] as { type: normType; count: number }[],
-    positions: [],
-  },
-];
+interface CloudDataRes {
+  times: number;
+  name: string;
+  nid: string;
+}
 export default function Extraction() {
   const exploreStore = useExploreStore();
-  const [obj, setObj] = useState<string>(""); // 词云图中选中的物像
+  const [obj, setObj] = useState<string>(""); // 词云图中选中的物像id
   const [nid, setNid] = useState<string>(""); //网络图中选中的物像/组合
-  const [isList, setList] = useState<boolean>(true); //画作列表态
+  const [isList, setIsList] = useState<boolean>(true); //画作列表态
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pid, setPid] = useState<string>(""); //选中的一幅画作id
 
-  //每次重选物像都将返回列表态
-  useEffect(() => {
-    setList(true);
-  }, [nid]);
-  console.log(pid);
+  //获取词云图数据
+  const { data: cloudData, isLoading: cloudLoading } = useSWR<CloudDataRes[]>(
+    "/objset/cloud",
+    getFetcher<CloudDataRes[]>
+  );
+  //获取网络图数据
+  const { data: networkData, isLoading: networkLoading } = useSWR<{
+    nodes: Node[];
+    edges: Edge[];
+  }>(
+    obj !== "" ? `/objset/get/${obj}` : null,
+    getFetcher<{ nodes: Node[]; edges: Edge[] }>
+  );
+  //获取画作列表
+  const { data: picListData, isLoading: picListLoading } = useSWR<SimplePic[]>(
+    nid !== "" ? `/pic/list/${nid}` : null,
+    getFetcher<SimplePic[]>
+  );
+  //获取一幅画作
+  const { data: picData, isLoading: picLoading } = useSWR<PaintingType>(
+    pid !== "" ? `/pic/get/${pid}` : null,
+    getFetcher<PaintingType>
+  );
+
   return (
     <HStack
       className="extraction-main app-item-main"
@@ -143,46 +113,98 @@ export default function Extraction() {
           )}
         </HStack>
         {/* 物像集 */}
-        <Box border="1px" borderColor="gray.200">
+        <Box border="1px" borderColor="gray.200" w={250} h={220}>
           {obj === "" ? (
-            <Cloud
-              data={cloudData.map((i) => {
-                return { name: i.name, value: i.value, nid: i.name };
-              })}
-              select={(selected) => setObj(selected)}
-            />
+            cloudLoading ? (
+              <Center h={"100%"}>
+                <Spinner speed="0.8s" color="gray.300" />
+              </Center>
+            ) : (
+              <Cloud
+                data={(cloudData ? cloudData : []).map((i) => {
+                  return { name: i.name, value: i.times, nid: i.nid };
+                })}
+                select={(selected) => setObj(selected)}
+              />
+            )
+          ) : networkLoading ? (
+            <Center h={"100%"}>
+              <Spinner speed="0.8s" color="gray.300" />
+            </Center>
           ) : (
             <NetWork
-              nodes={networkData.nodes}
-              edges={networkData.edges}
-              select={(nid) => setNid(nid)}
+              nodes={networkData ? networkData.nodes : []}
+              edges={networkData ? networkData.edges : []}
+              select={(nid) => {
+                setNid(nid);
+                setIsList(true);
+              }}
             />
           )}
         </Box>
         {/* 画幅canvas */}
-        <Box flexGrow={1} bgColor={"gray.200"} overflow={"auto"}>
+        <Box flexGrow={1} bgColor={"gray.100"} overflow={"auto"}>
           {isList ? (
-            <Grid templateColumns={"repeat(3, 1fr)"} gap={1} p={1}>
-              {[
-                //TODO:添加空状态
-                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-                // 12, 13, 14, 15, 16, 17, 18,19, 20,
-              ].map((pic) => {
-                return (
-                  <GridItem key={pic} bgColor={"gray.300"}>
-                    <AspectRatio ratio={1}>
-                      <img
-                        src={
-                          "https://www.freeimg.cn/i/2024/02/26/65dc8760d517a.jpg"
-                        }
-                      />
-                    </AspectRatio>
-                  </GridItem>
-                );
-              })}
-            </Grid>
+            picListLoading ? (
+              <Center>
+                <Spinner
+                  speed="0.8s"
+                  color="gray.300"
+                  thickness="5px"
+                  size={"xl"}
+                />
+              </Center>
+            ) : picListData ? (
+              <Grid templateColumns={"repeat(3, 1fr)"} gap={1} p={1}>
+                {picListData.map((pic) => {
+                  return (
+                    <GridItem key={pic.pid} bgColor={"gray.300"}>
+                      <AspectRatio ratio={1}>
+                        <Tooltip label={pic.name[0] + " " + pic.name[1]}>
+                          <Image
+                            src={origin + pic.src}
+                            cursor={"pointer"}
+                            _hover={{
+                              filter: "brightness(1.2)",
+                            }}
+                            onClick={() => {
+                              setPid(pic.pid);
+                              setIsList(false);
+                              exploreStore.setNoumenon("", "");
+                            }}
+                          />
+                        </Tooltip>
+                      </AspectRatio>
+                    </GridItem>
+                  );
+                })}
+              </Grid>
+            ) : (
+              <Flex
+                h={"100%"}
+                color={"gray.300"}
+                align={"center"}
+                justifyContent={"center"}
+              >
+                {nid === ""
+                  ? "No selected noumenon"
+                  : "No matching paintings found"}
+              </Flex>
+            )
+          ) : picLoading ? (
+            <Center h={"100%"}>
+              <Spinner
+                speed="0.8s"
+                color="gray.300"
+                thickness="5px"
+                size={"xl"}
+              />
+            </Center>
           ) : (
-            <Painting />
+            <Painting
+              {...(picData ? { ...picData } : { ...picData1 })}
+              returnList={() => setIsList(true)}
+            />
           )}
         </Box>
       </Flex>
@@ -199,20 +221,58 @@ export default function Extraction() {
           align={"center"}
         >
           <VStack spacing={5} w={"95%"} h={"100%"}>
-            {noumenonData.map((n) => {
-              return (
-                <Noumenon
-                  key={n.nid}
-                  nid={n.nid}
-                  name={n.name}
-                  occurences={n.positions.length}
-                  type={n.type}
-                  isSeleted={exploreStore.noumenon.nid === n.nid}
-                  metaphors={n.metaphors.filter((t) => t.count > 0)}
-                  select={() => exploreStore.setNoumenon(n.nid, n.name)}
-                />
-              );
-            })}
+            {!isList ? (
+              picLoading ? (
+                <Center h={"100%"}>
+                  <Spinner
+                    speed="0.8s"
+                    color="gray.300"
+                    thickness="4px"
+                    size={"lg"}
+                  />
+                </Center>
+              ) : (
+                [
+                  ...picData!.noumenons.map((n) => {
+                    return (
+                      <Noumenon
+                        key={n.nid}
+                        nid={n.nid}
+                        name={n.name}
+                        occurences={n.positions.length}
+                        type={"single"}
+                        isSeleted={exploreStore.noumenon.nid === n.nid}
+                        metaphors={n.metaphors.filter((t) => t.count > 0)}
+                        select={() => exploreStore.setNoumenon(n.nid, n.name)}
+                      />
+                    );
+                  }),
+                  ...picData!.combinations.map((n) => {
+                    return (
+                      <Noumenon
+                        key={n.nid}
+                        nid={n.nid}
+                        name={n.name}
+                        occurences={0}
+                        type={"combination"}
+                        isSeleted={exploreStore.noumenon.nid === n.nid}
+                        metaphors={n.metaphors.filter((t) => t.count > 0)}
+                        select={() => exploreStore.setNoumenon(n.nid, n.name)}
+                      />
+                    );
+                  }),
+                ]
+              )
+            ) : (
+              <Flex
+                h={"100%"}
+                color={"gray.300"}
+                align={"center"}
+                textAlign={"center"}
+              >
+                No selected painting
+              </Flex>
+            )}
           </VStack>
         </Flex>
       </Flex>
