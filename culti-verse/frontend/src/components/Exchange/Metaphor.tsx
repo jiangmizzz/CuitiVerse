@@ -18,7 +18,12 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { ExchangeItem, MetaphorType } from "../../vite-env";
-import { normColorMap, optIconMap, textBoxCfg } from "../../stores/maps";
+import {
+  emotionIcon,
+  normColorMap,
+  optIconMap,
+  textBoxCfg,
+} from "../../stores/maps";
 import deleteIcon from "../../assets/delete.svg";
 import refreshIcon from "../../assets/refresh.svg";
 import send from "../../assets/send_msg.svg";
@@ -51,7 +56,7 @@ interface ExchangeEntryProps {
   regenImg: () => void;
 }
 
-//单条用户操作历史
+//TODO:单条用户操作历史
 function ExchangeEntry(props: ExchangeEntryProps) {
   if (props.item.isLoading === true) {
     //loading态的信息
@@ -186,7 +191,7 @@ interface MetaphorProps extends MetaphorType {
   isChatting: boolean; //chating state，显示对话输入框
   select: () => void;
 }
-//喻体对象组件
+//TODO:喻体对象组件
 export default function Metaphor(props: MetaphorProps) {
   const exchangeStore = useExchangeStore();
   const settingStore = useSettingStore();
@@ -230,7 +235,8 @@ export default function Metaphor(props: MetaphorProps) {
     const messages = [
       {
         role: "system",
-        content: "This is the context of this conversation.",
+        content:
+          "This conversation is about traditional Chinese painting. This is the context of this conversation.",
       },
       ...context,
       {
@@ -291,6 +297,14 @@ export default function Metaphor(props: MetaphorProps) {
             </Flex>
           </TagLabel>
         </Tag>
+        <Image
+          src={emotionIcon.get(props.emotion)}
+          w={3}
+          ml={-3}
+          position={"relative"}
+          left={1.5}
+          objectFit={"contain"}
+        />
       </Flex>
       {/* 防止产生额外的spacing */}
       {(props.history.length > 0 || props.isChatting) && (
