@@ -2,7 +2,7 @@
  * 用于保存用户探索的路径
  */
 import { create } from "zustand";
-import { ExploreTrack, MetaphorType, normType } from "../vite-env";
+import { ExploreTrack, MetaphorType } from "../vite-env";
 
 interface ExploreState extends ExploreTrack {
   setNoumenon: (newId: string, newValue: string) => void;
@@ -21,7 +21,8 @@ export const useExploreStore = create<ExploreState>()((set, get) => ({
   metaphor: {
     mid: "",
     text: "",
-    normType: "Iconic" satisfies normType,
+    normType: "Iconic",
+    emotion: "Neutral",
   },
   foreignMetaphor: {
     text: "",
@@ -34,7 +35,8 @@ export const useExploreStore = create<ExploreState>()((set, get) => ({
         metaphor: {
           mid: "",
           text: "",
-          normType: "Iconic" satisfies normType,
+          normType: "Iconic",
+          emotion: "Neutral",
         },
         foreignMetaphor: { text: "" },
       };
@@ -47,6 +49,7 @@ export const useExploreStore = create<ExploreState>()((set, get) => ({
           mid: newValue.mid,
           text: newValue.text,
           normType: newValue.normType,
+          emotion: newValue.emotion,
         },
         foreignMetaphor: { text: "" },
       };
