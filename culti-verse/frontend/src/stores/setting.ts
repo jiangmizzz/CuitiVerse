@@ -19,6 +19,7 @@ export const useSettingStore = create<SettingState>()((set, get) => ({
   edu: "bachelor's degree",
   u1: 3,
   u2: 3,
+  remark: "",
   updateInfo: (newValue) => {
     set(() => {
       return {
@@ -27,6 +28,7 @@ export const useSettingStore = create<SettingState>()((set, get) => ({
         edu: newValue.edu,
         u1: newValue.u1,
         u2: newValue.u2,
+        remark: newValue.remark,
       };
     });
   },
@@ -38,6 +40,7 @@ export const useSettingStore = create<SettingState>()((set, get) => ({
         edu: "bachelor's degree",
         u1: 3,
         u2: 3,
+        remark: "",
       };
     });
   },
@@ -50,6 +53,11 @@ export const useSettingStore = create<SettingState>()((set, get) => ({
       get().u1
     } points (on a scale of 1 to 5), and my level of understanding of traditional Chinese painting is approximately ${
       get().u2
-    } points (on a scale of 1 to 5). `;
+    } points (on a scale of 1 to 5). ${
+      get().remark !== ""
+        ? "In addition, I would like to note the following about my cultural background: " +
+          get().remark
+        : ""
+    }`;
   },
 }));
