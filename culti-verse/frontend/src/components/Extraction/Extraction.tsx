@@ -14,6 +14,8 @@ import {
   Image,
   Center,
   Spinner,
+  Badge,
+  Divider,
 } from "@chakra-ui/react";
 import { useState } from "react";
 import Cloud from "./Cloud";
@@ -31,7 +33,9 @@ import Noumenon from "./Noumenon";
 import { useExploreStore } from "../../stores/explore";
 import useSWR from "swr";
 import { getFetcher, origin } from "../../utils/request";
-import { seriesIcon } from "../../stores/maps";
+import { normColorMap, seriesIcon } from "../../stores/maps";
+import Choice from "../Exchange/Choice";
+import { useConditionsStore } from "../../stores/conditions";
 
 //值得记录的写法+1
 type SimplePic = Pick<
@@ -63,6 +67,7 @@ const picData1: PaintingType = {
 
 export default function Extraction() {
   const exploreStore = useExploreStore();
+  const conditionsStore = useConditionsStore();
   const [obj, setObj] = useState<string>(""); // 词云图中选中的物像id
   const [nid, setNid] = useState<string>(""); //网络图中选中的物像/组合
   const [isList, setIsList] = useState<boolean>(true); //画作列表态
@@ -229,9 +234,48 @@ export default function Extraction() {
       </Flex>
       {/* min-content yyds 用以限制此列宽度被heading部分撑开*/}
       <Flex w={"min-content"} direction={"column"} h={"100%"}>
-        <Heading as="h5" size="sm" whiteSpace={"nowrap"} mb={1}>
+        <Heading as="h5" size="sm" whiteSpace={"nowrap"} mb={1} px={2}>
           {"Element Selection"}
         </Heading>
+        <VStack spacing={0} align={"start"}>
+          <HStack spacing={1.5}>
+            <Badge variant="solid" colorScheme="blackAlpha">
+              {2}
+            </Badge>
+            <Text fontSize={"sm"}>{"Image Frequency"}</Text>
+          </HStack>
+          <HStack spacing={1.5}>
+            <Badge
+              variant="solid"
+              rounded={"full"}
+              h={4}
+              w={4}
+              fontSize={"11px"}
+              textAlign={"center"}
+              bgColor={normColorMap.get("Homophony")}
+            >
+              {1}
+            </Badge>
+            <Text fontSize={"sm"}>{"Rhetoric Frequency"}</Text>
+          </HStack>
+        </VStack>
+        <Flex w={"100%"} direction={"column"} align={"center"} mt={2}>
+          <Choice
+            text={"element"}
+            isRequired={false}
+            isChecked={conditionsStore.keeping.element !== false}
+            onToggle={() =>
+              conditionsStore.setCondition({
+                keeping: {
+                  ...conditionsStore.keeping,
+                  element: !conditionsStore.keeping.element,
+                },
+              })
+            }
+          />
+          <Divider opacity={1} variant={"dashed"} mt={0.5} />
+        </Flex>
+
         {/* 画作中的物像列表 */}
         <Flex
           flexGrow={1}
