@@ -19,12 +19,24 @@ export type optKey = "def" | "similar" | "gen_img" | "chat" | "trans";
 
 export type checkType = "Appropriate" | "Emotion" | "Inference";
 
+export type seriesType = "Animal" | "Plant" | "Fruit" | "Other";
+
+export type emotionType = "Positive" | "Neutral" | "Negative";
+
+export type conditionType =
+  | "element"
+  | "rhetoric"
+  | "symbol"
+  | "custom"
+  | "emotion";
+
 export interface Settings {
   culture: string;
   age: number;
   edu: eduType;
   u1: number;
   u2: number;
+  remark: string;
 }
 
 export interface ExploreTrack {
@@ -77,6 +89,7 @@ export interface MetaphorType {
   text: string; //喻体文本
   //本体到喻体的转化类型（颜色编码）
   normType?: normType;
+  emotion: emotionType;
 }
 
 export type ExchangeItem = (
@@ -107,4 +120,13 @@ export interface cloudData {
   value: number;
   name: string;
   nid: string;
+}
+
+export interface CloudData {
+  type: seriesType;
+  data: {
+    value: number;
+    name: string;
+    nid: string;
+  }[];
 }
