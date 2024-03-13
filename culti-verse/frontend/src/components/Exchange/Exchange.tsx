@@ -92,16 +92,16 @@ export default function Exchange() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedM, setSelectedM] = useState<{
     mid: string;
-    text: string;
+    text: string[];
     isForeign: boolean;
-  }>({ mid: "", text: "", isForeign: false });
+  }>({ mid: "", text: [], isForeign: false });
   const [currentOpt, setCurrentOpt] = useState<optKey | null>(null);
   const [foreignM, setForeignM] = useState<MetaphorType[]>([]);
   const [isTransforming, setTransforming] = useState<boolean>(false);
 
   //更新选中物像时清空selectedM
   useEffect(() => {
-    setSelectedM({ mid: "", text: "", isForeign: false });
+    setSelectedM({ mid: "", text: [], isForeign: false });
   }, [exploreStore.noumenon.nid]);
   //更新本土喻体时清空原转译内容
   useEffect(() => {
@@ -150,7 +150,9 @@ export default function Exchange() {
           : "China";
         const imgUrl = await generateImg(
           settingStore.generateDesc() +
-            `Please generate a schematic diagram of the image of the ${selectedM.text} in the context of ${targetCulture} culture, which can make it easy for me to understand it.`
+            `Please generate a schematic diagram of the image of the ${
+              selectedM.text[0] + "(" + selectedM.text[1] + ")"
+            } in the context of ${targetCulture} culture, which can make it easy for me to understand it.`
         );
         exchangeStore.deleteItem(mid, loadingId);
         exchangeStore.addItem(mid, {
@@ -181,9 +183,11 @@ export default function Exchange() {
             answer.split(",").map((text) => {
               return {
                 mid: selectedM.mid + text,
-                text: text,
+                text: [text],
                 //TODO:这里的格式要再调整
                 emotion: "Neutral",
+                normType: "Homograph",
+                meaning: ["", ""],
               } satisfies MetaphorType;
             })
           );
@@ -337,6 +341,7 @@ export default function Exchange() {
                     text={m.text}
                     normType={m.normType}
                     emotion={m.emotion}
+                    meaning={m.meaning}
                     history={exchangeStore.exchangesMap.get(m.mid) ?? []}
                     isForeign={false}
                     isSelected={exploreStore.metaphor.mid === m.mid}
@@ -351,6 +356,7 @@ export default function Exchange() {
                         text: m.text,
                         normType: m.normType,
                         emotion: m.emotion,
+                        meaning: m.meaning,
                       });
                       //activate
                       setSelectedM({
@@ -379,6 +385,7 @@ export default function Exchange() {
                   text={fm.text}
                   normType={fm.normType}
                   emotion={fm.emotion}
+                  meaning={fm.meaning}
                   history={exchangeStore.exchangesMap.get(fm.mid) ?? []}
                   isForeign={true}
                   isSelected={exploreStore.foreignMetaphor.text === fm.text}
