@@ -85,14 +85,31 @@ export const useExchangeStore = create<ExchangeState>()((set, get) => ({
   },
   addItem: (mid, item) => {
     set((prevState) => {
-      const lastMsgs = prevState.exchangesMap.get(mid)!;
-      return {
-        counter: prevState.counter + 1,
-        exchangesMap: prevState.exchangesMap.set(mid, [
-          ...lastMsgs,
-          { ...item, id: prevState.counter, isLoading: false } as ExchangeItem,
-        ]),
-      };
+      if (!prevState.exchangesMap.has(mid)) {
+        return {
+          counter: prevState.counter + 1,
+          exchangesMap: prevState.exchangesMap.set(mid, [
+            {
+              ...item,
+              id: prevState.counter,
+              isLoading: false,
+            } as ExchangeItem,
+          ]),
+        };
+      } else {
+        const lastMsgs = prevState.exchangesMap.get(mid)!;
+        return {
+          counter: prevState.counter + 1,
+          exchangesMap: prevState.exchangesMap.set(mid, [
+            ...lastMsgs,
+            {
+              ...item,
+              id: prevState.counter,
+              isLoading: false,
+            } as ExchangeItem,
+          ]),
+        };
+      }
     });
   },
   deleteItem: (mid, id) => {
