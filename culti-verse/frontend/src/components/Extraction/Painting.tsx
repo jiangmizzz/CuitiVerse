@@ -5,8 +5,10 @@
 import { useEffect, useRef, useState } from "react";
 import { PaintingType } from "../../vite-env";
 import {
-  Button,
+  Center,
   Flex,
+  Text,
+  HStack,
   IconButton,
   Modal,
   ModalBody,
@@ -15,21 +17,40 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Spinner,
   Tooltip,
   VStack,
+  Divider,
+  As,
 } from "@chakra-ui/react";
-import { origin } from "../../utils/request";
+import { getFetcher, origin } from "../../utils/request";
 import ImgPreviewer from "../ImgPreviewer/ImgPreviewer";
 import { ArrowBackIcon, ChatIcon, EditIcon, ViewIcon } from "@chakra-ui/icons";
+import useSWR from "swr";
 
 interface PaintingProps extends PaintingType {
   returnList: () => void;
 }
-
+interface PaintingInfo {
+  name: string[];
+  material: string[];
+  color: string[];
+  size: string[];
+  dynasty: string[];
+  author: string[];
+  collection: string[];
+}
 const btnCfg = {
   size: "sm",
   rounded: "full",
   bgColor: "gray.200",
+};
+const attrCfg: {
+  as: As;
+  whiteSpace: string;
+} = {
+  as: "b",
+  whiteSpace: "nowrap",
 };
 
 export default function Painting(props: PaintingProps) {
@@ -72,7 +93,7 @@ export default function Painting(props: PaintingProps) {
       context.lineWidth = 1.5 * scaleX;
       context.strokeStyle = "red";
       for (const n of props.noumenons) {
-        const width = n.name.length;
+        const width = context.measureText(n.name[1]).width;
         for (const rect of n.positions) {
           //绘制
           context.fillStyle = "rgba(200, 0, 0, 0.5)";
@@ -80,12 +101,12 @@ export default function Painting(props: PaintingProps) {
           context.fillRect(
             rect[0] * imageWidth,
             rect[1] * imageHeight - fontPlus * scaleX,
-            width * fontPlus * scaleX,
+            width + 2 * scaleX,
             fontPlus * scaleX
           );
           context.fillStyle = "white";
           context.fillText(
-            n.name,
+            n.name[1],
             rect[0] * imageWidth + scaleX,
             rect[1] * imageHeight - 2 * scaleX
           );
@@ -101,6 +122,11 @@ export default function Painting(props: PaintingProps) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const { data: infoData, isLoading: infoLoading } = useSWR<PaintingInfo>(
+    openModal ? `/pic/info/${props.pid}` : null,
+    getFetcher<PaintingInfo>
+  );
   return (
     <VStack
       h={"100%"}
@@ -109,20 +135,71 @@ export default function Painting(props: PaintingProps) {
       onMouseLeave={() => setShow(false)}
       spacing={0}
     >
-      <Modal isOpen={openModal} onClose={() => setOpen(false)} isCentered>
+      <Modal
+        size={"lg"}
+        isOpen={openModal}
+        onClose={() => setOpen(false)}
+        isCentered
+      >
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Modal Title</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>123</ModalBody>
+        {infoLoading ? (
+          <Center h={"100%"}>
+            <Spinner
+              speed="0.8s"
+              color="gray.300"
+              thickness="4px"
+              size={"lg"}
+            />
+          </Center>
+        ) : (
+          infoData && (
+            <ModalContent>
+              <ModalHeader py={3} bgColor={"gray.200"} borderTopRadius={"md"}>
+                {infoData.name[0] + " / " + infoData.name[1]}
+              </ModalHeader>
+              <ModalCloseButton />
+              <Divider mb={3} />
+              <ModalBody>
+                <VStack align={"start"}>
+                  <HStack align={"start"}>
+                    <Text {...attrCfg}>{"材料 (Material): "}</Text>
+                    <Text>
+                      {infoData.material[0] + " / " + infoData.material[1]}
+                    </Text>
+                  </HStack>
+                  <HStack align={"start"}>
+                    <Text {...attrCfg}>{"色彩 (Color): "}</Text>
+                    <Text>{infoData.color[0] + " / " + infoData.color[1]}</Text>
+                  </HStack>
+                  <HStack align={"start"}>
+                    <Text {...attrCfg}>{"尺寸 (Size): "}</Text>
+                    <Text>{infoData.size[0] + " / " + infoData.size[1]}</Text>
+                  </HStack>
+                  <HStack align={"start"}>
+                    <Text {...attrCfg}>{"朝代 (Dynasty): "}</Text>
+                    <Text>
+                      {infoData.dynasty[0] + " / " + infoData.dynasty[1]}
+                    </Text>
+                  </HStack>
+                  <HStack align={"start"}>
+                    <Text {...attrCfg}>{"作者 (Author): "}</Text>
+                    <Text>
+                      {infoData.author[0] + " / " + infoData.author[1]}
+                    </Text>
+                  </HStack>
+                  <HStack align={"start"}>
+                    <Text {...attrCfg}>{"馆藏地 (Collection): "}</Text>
+                    <Text>
+                      {infoData.collection[0] + " / " + infoData.collection[1]}
+                    </Text>
+                  </HStack>
+                </VStack>
+              </ModalBody>
 
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={() => setOpen(false)}>
-              Close
-            </Button>
-            <Button variant="ghost">Secondary Action</Button>
-          </ModalFooter>
-        </ModalContent>
+              <ModalFooter></ModalFooter>
+            </ModalContent>
+          )
+        )}
       </Modal>
       {/* toolbar */}
       <Flex
