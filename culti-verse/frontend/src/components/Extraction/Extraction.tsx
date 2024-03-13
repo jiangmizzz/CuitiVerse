@@ -134,7 +134,7 @@ export default function Extraction() {
                 <HStack flexGrow={1}>
                   {series.map((s) => {
                     return (
-                      <Flex align={"center"} gap={0.4}>
+                      <Flex align={"center"} gap={0.4} key={s}>
                         <Image
                           w={4}
                           objectFit={"cover"}
@@ -232,6 +232,7 @@ export default function Extraction() {
           )}
         </Box>
       </Flex>
+      {/* heading */}
       {/* min-content yyds 用以限制此列宽度被heading部分撑开*/}
       <Flex w={"min-content"} direction={"column"} h={"100%"}>
         <Heading as="h5" size="sm" whiteSpace={"nowrap"} mb={1} px={2}>
@@ -259,7 +260,7 @@ export default function Extraction() {
             <Text fontSize={"sm"}>{"Rhetoric Frequency"}</Text>
           </HStack>
         </VStack>
-        <Flex w={"100%"} direction={"column"} align={"center"} mt={2}>
+        <Flex w={"100%"} direction={"column"} align={"center"} my={2}>
           <Choice
             text={"element"}
             isRequired={false}
@@ -302,8 +303,9 @@ export default function Extraction() {
                         key={n.nid}
                         nid={n.nid}
                         name={n.name}
-                        occurences={n.positions.length}
+                        occurences={n.positions}
                         type={"single"}
+                        paintingSrc={picData!.src}
                         isSeleted={exploreStore.noumenon.nid === n.nid}
                         metaphors={n.metaphors.filter((t) => t.count > 0)}
                         select={() => exploreStore.setNoumenon(n.nid, n.name)}
@@ -316,8 +318,9 @@ export default function Extraction() {
                         key={n.nid}
                         nid={n.nid}
                         name={n.name}
-                        occurences={0}
+                        occurences={[]}
                         type={"combination"}
+                        paintingSrc=""
                         isSeleted={exploreStore.noumenon.nid === n.nid}
                         metaphors={n.metaphors.filter((t) => t.count > 0)}
                         select={() => exploreStore.setNoumenon(n.nid, n.name)}
