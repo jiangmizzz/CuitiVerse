@@ -18,7 +18,8 @@ const boxCfg = {
 function BoxHeader(props: { title: string; position: "l" | "m" | "r" }) {
   return (
     <Center
-      h={"2em"}
+      //*需要将h改为minH，否则header部分高度会被下方内容压窄
+      minH={"2em"}
       bg={
         props.position === "l"
           ? "#9B8267"
