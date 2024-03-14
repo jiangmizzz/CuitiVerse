@@ -5,7 +5,7 @@ import { create } from "zustand";
 import { ExploreTrack, MetaphorType } from "../vite-env";
 
 interface ExploreState extends ExploreTrack {
-  setNoumenon: (newId: string, newValue: string) => void;
+  setNoumenon: (newId: string, newValue: string[]) => void;
   setMetaphor: (newValue: MetaphorType) => void;
   setForeign: (newValue: string[]) => void;
   isCompleted: () => boolean;
@@ -16,7 +16,7 @@ interface ExploreState extends ExploreTrack {
 export const useExploreStore = create<ExploreState>()((set, get) => ({
   noumenon: {
     nid: "",
-    text: "",
+    text: [],
   },
   metaphor: {
     mid: "",

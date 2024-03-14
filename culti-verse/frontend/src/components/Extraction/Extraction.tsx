@@ -52,7 +52,7 @@ const picData1: PaintingType = {
   noumenons: [
     {
       nid: "0",
-      name: "landscape",
+      name: ["亭子", "landscape"],
       positions: [
         [
           0.18494167923927307, 0.016178250312805176, 0.7066805958747864,
@@ -131,7 +131,7 @@ export default function Extraction() {
               </Center>
             ) : (
               <Flex direction={"column"} justify={"space-between"}>
-                <HStack flexGrow={1}>
+                <HStack flexGrow={1} align={"center"} pl={2}>
                   {series.map((s) => {
                     return (
                       <Flex align={"center"} gap={0.4} key={s}>
@@ -194,7 +194,7 @@ export default function Extraction() {
                             onClick={() => {
                               setPid(pic.pid);
                               setIsList(false);
-                              exploreStore.setNoumenon("", "");
+                              exploreStore.setNoumenon("", []);
                             }}
                           />
                         </Tooltip>
@@ -308,7 +308,9 @@ export default function Extraction() {
                         paintingSrc={picData!.src}
                         isSeleted={exploreStore.noumenon.nid === n.nid}
                         metaphors={n.metaphors.filter((t) => t.count > 0)}
-                        select={() => exploreStore.setNoumenon(n.nid, n.name)}
+                        select={() =>
+                          exploreStore.setNoumenon(n.nid, [...n.name])
+                        }
                       />
                     );
                   }),
@@ -323,7 +325,9 @@ export default function Extraction() {
                         paintingSrc=""
                         isSeleted={exploreStore.noumenon.nid === n.nid}
                         metaphors={n.metaphors.filter((t) => t.count > 0)}
-                        select={() => exploreStore.setNoumenon(n.nid, n.name)}
+                        select={() =>
+                          exploreStore.setNoumenon(n.nid, [...n.name])
+                        }
                       />
                     );
                   }),

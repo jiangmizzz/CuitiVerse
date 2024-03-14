@@ -40,7 +40,7 @@ export interface Settings {
 }
 
 export interface ExploreTrack {
-  noumenon: { nid: string; text: string }; //物像
+  noumenon: { nid: string; text: string[] }; //物像
   //喻体
   metaphor: MetaphorType;
   foreignMetaphor: {

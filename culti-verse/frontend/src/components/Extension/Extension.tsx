@@ -193,7 +193,7 @@ export default function Extension() {
           );
         })}
       </VStack>
-      <Box w={290}>
+      <Box>
         <HStack mb={1}>
           {(["Appropriate", "Emotion", "Inference"] as checkType[]).map(
             (option) => {
