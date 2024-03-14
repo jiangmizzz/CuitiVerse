@@ -2,15 +2,17 @@ package dto
 
 type Painting struct {
 	PID          string         `json:"pid"`
-	Name         string         `json:"name"`
+	Name         [2]string      `json:"name"`
 	Src          string         `json:"src"`
 	Noumenons    []Noumenons    `json:"noumenons"`
 	Combinations []Combinations `json:"combinations"`
 }
 
 type Noumenons struct {
-	Noumenon Noumenon     `json:"noumenon"`
-	Position [4][]float32 `json:"position"` // x, y, w, h
+	NID       string          `json:"nid"`
+	Name      [2]string       `json:"name"`
+	Metaphors []MetaphorCount `json:"metaphors"`
+	Position  [][]float32     `json:"positions"` // x, y, w, h
 }
 
 type Combinations struct {
@@ -30,9 +32,11 @@ type MetaphorCount struct {
 }
 
 type Metaphor struct {
-	MID      string `json:"mid"`
-	Text     string `json:"text"`
-	NormType string `json:"normType"`
+	MID      string    `json:"mid"`
+	Text     [2]string `json:"text"`
+	NormType string    `json:"normType"`
+	Emotion  string    `json:"emotion"`
+	Meaning  [2]string `json:"meaning"`
 }
 
 type Combination struct {
@@ -41,7 +45,12 @@ type Combination struct {
 
 // 物像集词云请求和响应
 type ObjsetCloudResp []struct {
-	Times int    `json:"times"`
+	Type string `json:"type"` // 物像类型
+	Data []Data `json:"data"` // 物像数据
+}
+
+type Data struct {
+	Value int    `json:"value"`
 	Name  string `json:"name"`
 	NID   string `json:"nid"`
 }
@@ -87,7 +96,11 @@ type PicGetReq struct {
 }
 
 type PicGetResp struct {
-	Painting Painting `json:"painting"`
+	PID          string         `json:"pid"`
+	Name         [2]string      `json:"name"`
+	Src          string         `json:"src"`
+	Noumenons    []Noumenons    `json:"noumenons"`
+	Combinations []Combinations `json:"combinations"`
 }
 
 // 获取喻体
@@ -103,8 +116,12 @@ type PicMetaphorsReq struct {
 	Name string `json:"name,omitempty"`
 }
 
-type PicMetaphorsResp struct {
-	Metaphor []Metaphor `json:"metaphor"`
+type PicMetaphorsResp []struct {
+	MID      string    `json:"mid"`
+	Text     [2]string `json:"text"`
+	NormType string    `json:"normType"`
+	Emotion  string    `json:"emotion"`
+	Meaning  [2]string `json:"meaning"`
 }
 
 // 获取喻体定义的请求和响应
@@ -123,13 +140,13 @@ type PicInfoReq struct {
 
 // 以下均为长度为2的字符串数组，index=0为zh, index=1为en
 type PicInfoResp struct { //画作描述
-	Name       [2]string //画作名
-	Material   [2]string //材料
-	Color      [2]string //色彩
-	Size       [2]string //尺寸
-	Dynasty    [2]string //朝代
-	Author     [2]string //作者
-	Collection [2]string //馆藏地
+	Name       [2]string `json:"name"`       //画作名
+	Material   [2]string `json:"material"`   //材料
+	Color      [2]string `json:"color"`      //色彩
+	Size       [2]string `json:"size"`       //尺寸
+	Dynasty    [2]string `json:"dynasty"`    //朝代
+	Author     [2]string `json:"author"`     //作者
+	Collection [2]string `json:"collection"` //馆藏地
 }
 
 type PicAddReq struct {

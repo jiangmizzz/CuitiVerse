@@ -20,10 +20,11 @@ type Painting struct {
 }
 
 type Noumenon struct {
-	NID    string `gorm:"primaryKey;size:255" json:"nid"`
-	Name   string `gorm:"size:255" json:"name"`
-	Name_e string `gorm:"size:255" json:"name_e"`
-	TIMES  int    `gorm:"not null" json:"times"`
+	NID      string `gorm:"primaryKey;size:255" json:"nid"`
+	Name     string `gorm:"size:255" json:"name"`
+	Name_e   string `gorm:"size:255" json:"name_e"`
+	TIMES    int    `gorm:"not null" json:"times"`
+	Category string `gorm:"size:255" json:"category"`
 }
 
 type Metaphor struct {

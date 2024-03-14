@@ -4,6 +4,7 @@ import (
 	"CVB/api/dto"
 	"CVB/dao"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -69,23 +70,60 @@ func GetPicGetHandler(c *gin.Context) {
 	}
 
 	// 转化为dto的格式
-	var noumenons []dto.Noumenons
+	var tempNoumenonsMap map[string]*dto.Noumenons = make(map[string]*dto.Noumenons)
+
 	for _, n := range paintingDetail.Noumenons {
 		var metaphors []dto.MetaphorCount
+		// 假设 metaphors 是一个 dto.MetaphorCount 类型的切片
+		// 创建一个映射来跟踪不同类型的隐喻和它们的数量
+		metaphorMap := make(map[string]*dto.MetaphorCount)
+
 		for _, m := range n.Metaphors {
-			metaphors = append(metaphors, dto.MetaphorCount{
-				Type:  m.Type,
-				Count: m.Count,
-			})
+			// 检查这个类型的隐喻是否已经在我们的映射中
+			if _, exists := metaphorMap[m.Type]; exists {
+			} else {
+				// 定义一个变量来保存处理后的字符串
+				var capitalizedtype string
+
+				// 检查category是否非空
+				if len(m.Type) > 0 {
+					capitalizedtype = strings.ToUpper(m.Type[:1]) + m.Type[1:]
+				} else {
+					capitalizedtype = ""
+				}
+				// 如果不存在，创建一个新的条目并添加到映射中
+				metaphorMap[m.Type] = &dto.MetaphorCount{
+					Type:  capitalizedtype,
+					Count: m.Count,
+				}
+			}
 		}
-		noumenons = append(noumenons, dto.Noumenons{
-			Noumenon: dto.Noumenon{
+
+		// 现在将映射转换回切片
+		metaphors = make([]dto.MetaphorCount, 0, len(metaphorMap))
+		for _, mc := range metaphorMap {
+			metaphors = append(metaphors, *mc)
+		}
+
+		// 检查是否已经有了相同NID的物象
+		if existing, found := tempNoumenonsMap[n.Noumenon.NID]; found {
+			// 已有则添加position到positions数组
+			existing.Position = append(existing.Position, n.Position)
+		} else {
+			// 没有则创建新的Noumenons并加入到map中
+			tempNoumenonsMap[n.Noumenon.NID] = &dto.Noumenons{
 				NID:       n.Noumenon.NID,
-				Name:      n.Noumenon.Name,
+				Name:      [2]string{n.Noumenon.Name, n.Noumenon.Name_e},
 				Metaphors: metaphors,
-			},
-			Position: n.Position,
-		})
+				Position:  [][]float32{n.Position}, // 新创建时直接使用一个包含当前position的二维数组
+			}
+		}
+	}
+
+	// 从map中提取所有values到slice
+	var noumenons []dto.Noumenons
+	for _, n := range tempNoumenonsMap {
+		noumenons = append(noumenons, *n)
 	}
 
 	var combinations []dto.Combinations
@@ -100,8 +138,12 @@ func GetPicGetHandler(c *gin.Context) {
 		})
 	}
 
+	// 如果combinations为空，则初始化为空数组
+	if combinations == nil {
+		combinations = []dto.Combinations{} // 根据CombinationType的具体类型修改
+	}
 	// Prepare the final DTO response
-	painting := dto.Painting{
+	paintingResp := dto.PicGetResp{
 		PID:          paintingDetail.PID,
 		Name:         paintingDetail.Name,
 		Src:          paintingDetail.Src,
@@ -109,9 +151,6 @@ func GetPicGetHandler(c *gin.Context) {
 		Combinations: combinations,
 	}
 
-	paintingResp := dto.PicGetResp{
-		Painting: painting,
-	}
 	c.JSON(http.StatusOK, dto.ResponseType[dto.PicGetResp]{
 		Success: true,
 		Data:    paintingResp,
@@ -119,6 +158,7 @@ func GetPicGetHandler(c *gin.Context) {
 	})
 }
 
+// 获取图像信息
 func GetPicInfoHandler(c *gin.Context) {
 	pid := dto.PicInfoReq{
 		PID: c.Param("pid"), // 从URL路径中获取pid
@@ -176,20 +216,46 @@ func GetPicMetaphorsHandler(c *gin.Context) {
 	}
 
 	// 创建 DTO 的 Metaphors 数组
-	var metaphorsDTO []dto.Metaphor
+	var metaphorsDTO dto.PicMetaphorsResp
 	for _, m := range metaphors {
-		metaphorDTO := dto.Metaphor{
-			MID:      m.MID,
-			Text:     m.Custom,     // 假设您想将 Symbol 和 SymbolE 合并
-			NormType: m.NormType_e, // 直接使用 NormType，假设它已经是您想要的格式
+		// 创建一个新的 Metaphor 结构体实例，并设置其字段
+		if strings.Contains(m.MID, "+") {
+			continue
 		}
-		metaphorsDTO = append(metaphorsDTO, metaphorDTO)
+		// 定义一个变量来保存处理后的字符串
+		var capitalizedEmotion string
+
+		// 检查category是否非空
+		if len(m.Emotion) > 0 {
+			capitalizedEmotion = strings.ToUpper(m.Emotion[:1]) + m.Emotion[1:]
+		} else {
+			capitalizedEmotion = ""
+		}
+
+		// 定义一个变量来保存处理后的字符串
+		var capitalizedNormtype_e string
+
+		// 检查category是否非空
+		if len(m.NormType_e) > 0 {
+			capitalizedNormtype_e = strings.ToUpper(m.NormType_e[:1]) + m.NormType_e[1:]
+		} else {
+			capitalizedNormtype_e = ""
+		}
+
+		newMetaphor := dto.Metaphor{
+			MID:  m.MID,
+			Text: [2]string{m.Symbol, m.Symbol_e},
+			// Text:     m.Symbol + "/" + m.Symbol_e, // 假设 m.Custom 是正确的字段
+			NormType: capitalizedNormtype_e, // 假设 m.NormType_e 是正确的字段
+			Emotion:  capitalizedEmotion,
+			Meaning:  [2]string{m.Custom, m.Custom_e},
+		}
+		// 使用 append 来添加新元素到切片
+		metaphorsDTO = append(metaphorsDTO, newMetaphor)
 	}
 
 	// 将 DTO 数组包装到响应结构体中
-	resp := dto.PicMetaphorsResp{
-		Metaphor: metaphorsDTO,
-	}
+	resp := metaphorsDTO
 
 	c.JSON(http.StatusOK, dto.ResponseType[dto.PicMetaphorsResp]{
 		Success: true,
@@ -250,8 +316,17 @@ func PicAddHandler(c *gin.Context) {
 		Metaphors: []dto.MetaphorCount{},
 	}
 	for _, metaphor := range PicAddDB.NewNoumenon.Metaphors {
+		// 定义一个变量来保存处理后的字符串
+		var capitalizedType string
+
+		// 检查category是否非空
+		if len(metaphor.Type) > 0 {
+			capitalizedType = strings.ToUpper(metaphor.Type[:1]) + metaphor.Type[1:]
+		} else {
+			capitalizedType = ""
+		}
 		newNoumenon.Metaphors = append(newNoumenon.Metaphors, dto.MetaphorCount{
-			Type:  metaphor.Type,
+			Type:  capitalizedType,
 			Count: metaphor.Count,
 		})
 	}
@@ -265,8 +340,17 @@ func PicAddHandler(c *gin.Context) {
 			Metaphors: []dto.MetaphorCount{},
 		}
 		for _, metaphor := range combo.Noumenon.Metaphors {
+			// 定义一个变量来保存处理后的字符串
+			var capitalizedType string
+
+			// 检查category是否非空
+			if len(metaphor.Type) > 0 {
+				capitalizedType = strings.ToUpper(metaphor.Type[:1]) + metaphor.Type[1:]
+			} else {
+				capitalizedType = ""
+			}
 			convertedNoumenon.Metaphors = append(convertedNoumenon.Metaphors, dto.MetaphorCount{
-				Type:  metaphor.Type,
+				Type:  capitalizedType,
 				Count: metaphor.Count,
 			})
 		}
