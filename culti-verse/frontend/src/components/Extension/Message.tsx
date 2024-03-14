@@ -4,16 +4,40 @@ import {
   Flex,
   Image,
   Spinner,
-  VStack,
-  Text,
   CloseButton,
 } from "@chakra-ui/react";
 import { ExtensionMsg } from "../../vite-env";
 import robot from "../../assets/chat_gpt.svg";
 import user from "../../assets/user_avatar.svg";
 import { textBoxCfg } from "../../stores/maps";
+import MarkdownIt from "markdown-it";
+import hljs from "highlight.js";
+import { useEffect, useRef } from "react";
 
 export default function Message(props: ExtensionMsg & { delete: () => void }) {
+  const markdownRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const parser = new MarkdownIt({
+      html: true,
+      breaks: true,
+      linkify: true,
+      //代码高亮
+      highlight: (code, lang) => {
+        let result = null;
+        if (lang && hljs.getLanguage(lang)) {
+          result = hljs.highlight(lang, code, true).value;
+        } else if (!lang) {
+          result = hljs.highlightAuto(code).value;
+        }
+        return `<pre class="hljs " style="padding: 12px; border-radius: 4px; background-color: #EDF2F7 "><code>${result}</code></pre>`;
+      },
+    });
+    const html = parser.render(props.content);
+    if (markdownRef.current) {
+      markdownRef.current.innerHTML = html;
+    }
+  }, [props.content]);
+
   return (
     <Flex
       width={"100%"}
@@ -63,20 +87,14 @@ export default function Message(props: ExtensionMsg & { delete: () => void }) {
             />
           </Center>
         ) : (
-          <VStack spacing={2} align={"start"}>
-            {props.content.split("\n").map((para, index) => {
-              return (
-                <Text
-                  fontSize={"sm"}
-                  color={"gray.600"}
-                  lineHeight={"1.2em"}
-                  key={para + index}
-                >
-                  {para}
-                </Text>
-              );
-            })}
-          </VStack>
+          <Flex
+            ref={markdownRef}
+            direction={"column"}
+            fontSize={"sm"}
+            color={"gray.600"}
+            lineHeight={"1.2em"}
+            gap={2}
+          />
         )}
       </Box>
     </Flex>
