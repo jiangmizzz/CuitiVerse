@@ -68,7 +68,7 @@ func GetPaintingByID(pid dto.PicGetReq) (*model.DetailedPainting, error) {
 	// 创建DetailedPainting实例
 	detailedPainting := model.DetailedPainting{
 		PID:  painting.PID,
-		Name: painting.Name,
+		Name: [2]string{painting.Name, painting.Name_e},
 		Src:  painting.Src,
 	}
 
@@ -91,13 +91,13 @@ func GetPaintingByID(pid dto.PicGetReq) (*model.DetailedPainting, error) {
 		// 构造DetailedNoumenon
 		detailedNoumenon := model.DetailedNoumenon{
 			Noumenon: noumenon,
-			Position: [4][]float32{{float32(box.PositionX), float32(box.PositionY), float32(box.Width), float32(box.Height)}}, // 根据实际情况可能需要调整
+			Position: []float32{float32(box.PositionX), float32(box.PositionY), float32(box.Width), float32(box.Height)}, // 根据实际情况可能需要调整
 		}
 
 		// 转换Metaphors
 		for _, metaphor := range metaphors {
 			detailedNoumenon.Metaphors = append(detailedNoumenon.Metaphors, model.Metaphors{
-				Type:  metaphor.NormType,
+				Type:  metaphor.NormType_e,
 				Count: metaphor.COUNT,
 			})
 		}

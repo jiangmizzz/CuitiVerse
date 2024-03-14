@@ -2,16 +2,16 @@ package model
 
 type DetailedPainting struct {
 	PID          string             `json:"pid"`
-	Name         string             `json:"name"`
+	Name         [2]string          `json:"name"`
 	Src          string             `json:"src"`
 	Noumenons    []DetailedNoumenon `json:"noumenons"`
 	Combinations []Combination      `json:"combinations"`
 }
 
 type DetailedNoumenon struct {
-	Noumenon  Noumenon     `json:"noumenon"`
-	Metaphors []Metaphors  `json:"metaphors"`
-	Position  [4][]float32 `json:"position"` // x, y, w, h
+	Noumenon  Noumenon    `json:"noumenon"`
+	Metaphors []Metaphors `json:"metaphors"`
+	Position  []float32   `json:"position"` // x, y, w, h
 }
 
 type Combination struct {

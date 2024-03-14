@@ -4,40 +4,66 @@ import (
 	"CVB/api/dto"
 	"CVB/dao"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-// GetObjsetCloudHandler 获取物像集词云
 func GetObjsetCloudHandler(c *gin.Context) {
 	// 假设有一个函数GetNoumenonCloud在dao包中实现
 	cloudModel, err := dao.GetNoumenonCloud()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, dto.ResponseType[dto.ObjsetCloudResp]{
-			Success: false,
-			Data:    dto.ObjsetCloudResp{},
-			ErrCode: http.StatusInternalServerError,
-			ErrMsg:  err.Error(),
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"data":    nil, // 修改为nil，因为这里应当返回空的数据结构
+			"errCode": http.StatusInternalServerError,
+			"errMsg":  err.Error(),
 		})
 		return
 	}
 
-	// 转换模型数组到DTO数组
-	var cloud dto.ObjsetCloudResp // 注意这里根据你的定义，ObjsetCloudResp应该是切片类型
+	// 使用map根据类型分类物象数据
+	categorizedCloud := make(map[string][]dto.Data)
 	for _, n := range cloudModel {
-		cloud = append(cloud, struct {
-			Times int    `json:"times"`
-			Name  string `json:"name"`
-			NID   string `json:"nid"`
-		}{
-			Times: n.TIMES,
+		// 如果名称中包含'&'，则跳过
+		if strings.Contains(n.Name, "&") {
+			continue
+		}
+		// 初始化特定类型的数据切片
+		categorizedCloud[n.Category] = append(categorizedCloud[n.Category], dto.Data{
+			Value: n.TIMES,
 			Name:  n.Name,
 			NID:   n.NID,
 		})
 	}
+
+	// 直接使用dto.ObjsetCloudResp作为返回的切片类型
+	var cloudResp dto.ObjsetCloudResp
+	for category, data := range categorizedCloud {
+		// 定义一个变量来保存处理后的字符串
+		var capitalizedType string
+
+		// 检查category是否非空
+		if len(category) > 0 {
+			capitalizedType = strings.ToUpper(category[:1]) + category[1:]
+		} else {
+			capitalizedType = ""
+		}
+		cloudResp = append(cloudResp, struct {
+			// type要首字母大写
+
+			Type string     `json:"type"`
+			Data []dto.Data `json:"data"`
+		}{
+			Type: capitalizedType,
+			Data: data,
+		})
+	}
+
+	// 发送响应
 	c.JSON(http.StatusOK, dto.ResponseType[dto.ObjsetCloudResp]{
 		Success: true,
-		Data:    cloud,
+		Data:    cloudResp,
 		ErrCode: 0,
 	})
 }

@@ -1,0 +1,6 @@
+database:
+  username: ""
+  password: ""
+  host: "localhost"
+  port: 3306
+  dbname: "culti_verse_db"
