@@ -17,7 +17,7 @@ import {
   Badge,
   Divider,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Cloud from "./Cloud";
 import NetWork from "./Network";
 import {
@@ -73,6 +73,13 @@ export default function Extraction() {
   const [isList, setIsList] = useState<boolean>(true); //画作列表态
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pid, setPid] = useState<string>(""); //选中的一幅画作id
+
+  //画作更新时同步刷新选择的物像
+  useEffect(() => {
+    console.log(pid);
+    exploreStore.setNoumenon("", []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pid]);
 
   //获取词云图数据
   const { data: cloudData, isLoading: cloudLoading } = useSWR<CloudData[]>(
@@ -194,7 +201,6 @@ export default function Extraction() {
                             onClick={() => {
                               setPid(pic.pid);
                               setIsList(false);
-                              exploreStore.setNoumenon("", []);
                             }}
                           />
                         </Tooltip>
@@ -285,7 +291,7 @@ export default function Extraction() {
           align={"center"}
         >
           <VStack spacing={5} w={"95%"} h={"100%"}>
-            {!isList ? (
+            {pid !== "" ? (
               picLoading ? (
                 <Center h={"100%"}>
                   <Spinner
