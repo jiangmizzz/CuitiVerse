@@ -37,7 +37,7 @@ export const useExchangeStore = create<ExchangeState>()((set, get) => ({
                   content: [ask],
                   isLoading: true,
                 }
-              : type === "similar"
+              : type === "similar" || type === "gen_img"
               ? {
                   id: prevState.counter,
                   opt: type,
@@ -64,7 +64,7 @@ export const useExchangeStore = create<ExchangeState>()((set, get) => ({
                   content: [ask],
                   isLoading: true,
                 }
-              : type === "similar"
+              : type === "similar" || type === "gen_img"
               ? {
                   id: prevState.counter,
                   opt: type,

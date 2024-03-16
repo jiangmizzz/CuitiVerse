@@ -96,11 +96,11 @@ export interface MetaphorType {
 
 export type ExchangeItem = (
   | {
-      opt: "def" | "gen_img";
+      opt: "def";
       content: string;
     }
   | {
-      opt: "chat" | "similar";
+      opt: "chat" | "similar" | "gen_img";
       content: string[]; // chat形式时content为string[2], similar形式时为src列表
     }
 ) & { id: number; isLoading: boolean };
@@ -131,4 +131,13 @@ export interface CloudData {
     name: string;
     nid: string;
   }[];
+}
+
+//详见Exchange.tsx中的prompt
+export interface Norm {
+  element: string[];
+  symbol: string[];
+  emotion: emotionType;
+  rhetoric: normType;
+  custom: string[];
 }

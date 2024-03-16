@@ -14,6 +14,7 @@ interface ConditionState {
   reset: () => void; //重置前两项
   isNoKeeping: () => boolean; //是否缺失条件
   isNoReq: () => boolean; //是否缺失设问
+  isRepeated: () => boolean; //keeping 和 requirement 是否有重叠
   setCondition: (
     newValue: Partial<Pick<ConditionState, "keeping" | "requirement">>
   ) => void;
@@ -74,6 +75,17 @@ export const useConditionsStore = create<ConditionState>()((set, get) => ({
       }
     }
     return true;
+  },
+  isRepeated: () => {
+    const keeping = get().keeping;
+    const requirement = get().requirement;
+    for (const key in keeping) {
+      const key1: keyof ConditionFormat = key as keyof ConditionFormat;
+      if (keeping[key1] === true && requirement[key1] === true) {
+        return true;
+      }
+    }
+    return false;
   },
   setCondition: (newValue) => {
     set(() => {

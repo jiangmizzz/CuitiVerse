@@ -75,11 +75,16 @@ function ExchangeEntry(props: ExchangeEntryProps) {
                 <Spinner {...spincfg} my={3} />
               </Center>
             ) : props.item.opt === "gen_img" ? (
-              <AspectRatio ratio={1} bgColor={"gray.100"}>
-                <Center>
-                  <Spinner {...spincfg} size={"xl"} thickness="5px" />
+              <VStack spacing={1}>
+                <AspectRatio w={"100%"} ratio={1} bgColor={"gray.100"}>
+                  <Center>
+                    <Spinner {...spincfg} size={"xl"} thickness="5px" />
+                  </Center>
+                </AspectRatio>
+                <Center {...textBoxCfg} w={"100%"}>
+                  <Spinner {...spincfg} my={3} />
                 </Center>
-              </AspectRatio>
+              </VStack>
             ) : props.item.opt === "chat" ? (
               <VStack spacing={1}>
                 <VStack {...textBoxCfg} w={"100%"}>
@@ -129,19 +134,30 @@ function ExchangeEntry(props: ExchangeEntryProps) {
                 })}
               </VStack>
             ) : props.item.opt === "gen_img" ? (
-              <AspectRatio ratio={1}>
-                <ImgPreviewer
-                  imgSrc={props.item.content}
-                  trigger={
-                    <Image
-                      objectFit={"contain"}
-                      src={props.item.content}
-                      cursor={"pointer"}
-                      title="Click to preview"
-                    />
-                  }
-                />
-              </AspectRatio>
+              <VStack spacing={1}>
+                <AspectRatio w={"100%"} ratio={1}>
+                  <ImgPreviewer
+                    imgSrc={props.item.content[0]}
+                    trigger={
+                      <Image
+                        objectFit={"contain"}
+                        src={props.item.content[0]}
+                        cursor={"pointer"}
+                        title="Click to preview"
+                      />
+                    }
+                  />
+                </AspectRatio>
+                <VStack {...textBoxCfg} w={"100%"}>
+                  {props.item.content[1].split("\n").map((l, index) => {
+                    return (
+                      <Text key={l + index + props.item.id} {...textCfg}>
+                        {l}
+                      </Text>
+                    );
+                  })}
+                </VStack>
+              </VStack>
             ) : props.item.opt === "chat" ? (
               <VStack spacing={1}>
                 <VStack {...textBoxCfg} w={"100%"}>
@@ -235,14 +251,32 @@ export default function Metaphor(props: MetaphorProps) {
     const targetCulture = props.isForeign ? settingStore.culture : "China";
     const imgUrl = await generateImg(
       settingStore.generateDesc() +
-        `Please generate a schematic diagram of the image of the ${
+        `Please generate a schematic diagram of the image of the main symbol: ${
           props.text[0] + "(" + props.text[1] + ")"
+        } ${
+          props.element ? "which relate slightly to " + props.element[1] : ""
         } in the context of ${targetCulture} culture, which can make it easy for me to understand it.`
     );
-    //再次更换
+    const descContext = [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: `Please use ${
+              settingStore.culture
+            }'s language to summarize the content of this picture (tips on perspective of understanding: ${
+              props.text[1]
+            }, ${props.element ? props.element[1] : ""}).`,
+          },
+          { type: "image_url", image_url: { url: imgUrl, detail: "auto" } },
+        ],
+      },
+    ] as ChatCompletionMessageParam[];
+    const desc = await chat(descContext, true);
     exchangeStore.replaceImg(props.mid, id, {
       opt: "gen_img",
-      content: imgUrl,
+      content: [imgUrl, desc],
       isLoading: false,
     });
   }
@@ -291,10 +325,17 @@ export default function Metaphor(props: MetaphorProps) {
     <Flex w={"100%"} gap={2} align={"start"}>
       {/* 对于foreign symbol，添加 element 部分 */}
       {props.isForeign && (
-        <Tag flexGrow={1} borderWidth={1} py={2.5}>
+        <Tag
+          flexGrow={1}
+          borderWidth={1}
+          borderColor={"gray.300"}
+          py={2.5}
+          // px={0}
+          bgColor={"gray.50"}
+        >
           <TagLabel>
             <Flex align={"center"}>
-              <Text fontSize="xl" textAlign={"center"} color={"black"}>
+              <Text fontSize="md" textAlign={"center"} color={"black"}>
                 {props.element![0] + " / " + props.element![1]}
               </Text>
             </Flex>
@@ -374,7 +415,7 @@ export default function Metaphor(props: MetaphorProps) {
               <SlideFade in={props.isChatting} style={{ width: "100%" }}>
                 <Flex align={"start"} gap={1} w={"100%"}>
                   <Box w={5} />
-                  <InputGroup flexGrow={1} w={300} margin={"auto"}>
+                  <InputGroup flexGrow={1} margin={"auto"}>
                     <Input
                       value={inputMsg}
                       pr={9}
