@@ -76,7 +76,6 @@ export default function Extraction() {
 
   //画作更新时同步刷新选择的物像
   useEffect(() => {
-    console.log(pid);
     exploreStore.setNoumenon("", []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pid]);

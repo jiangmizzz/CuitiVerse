@@ -177,7 +177,7 @@ export default function Extension() {
     <Flex
       className="extension-main app-item-main"
       direction={"column"}
-      w={"min-content"}
+      minW={0}
     >
       <VStack flex={1} overflow={"auto"} spacing={3} pb={2} maxW={300}>
         {msgList.msgs.map((msg) => {
@@ -193,7 +193,7 @@ export default function Extension() {
           );
         })}
       </VStack>
-      <Box>
+      <Box minW={260} overflowX={"auto"}>
         <HStack mb={1}>
           {(["Appropriate", "Emotion", "Inference"] as checkType[]).map(
             (option) => {
