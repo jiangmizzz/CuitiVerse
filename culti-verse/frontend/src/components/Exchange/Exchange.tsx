@@ -675,40 +675,49 @@ export default function Exchange() {
                     .tabs!.map((i) => {
                       return (
                         <TabPanel key={exploreStore.metaphor.mid + i.tid}>
-                          <HStack align={"start"} justify={"space-between"}>
-                            <VStack align={"start"} spacing={0}>
-                              <HStack>
+                          <Flex align={"start"} justify={"space-between"}>
+                            <VStack
+                              align={"start"}
+                              spacing={0}
+                              flex={1}
+                              fontSize={"sm"}
+                            >
+                              <HStack alignItems={"start"}>
                                 <Image
                                   src={keepIcon}
+                                  mt={1}
                                   w={3}
                                   objectFit={"contain"}
                                 />
-                                <Text fontSize={"sm"}>
-                                  <b>{"keepings: "}</b>
-                                  {i.keeping.toString()}
+                                <b>{"keepings: "}</b>
+                                <Text>
+                                  {i.keeping.toString().replace(/,/g, ", ")}
                                 </Text>
                               </HStack>
-                              <HStack>
+                              <HStack alignItems={"start"}>
                                 <Image
                                   src={requireIcon}
+                                  mt={1}
                                   w={3}
                                   objectFit={"contain"}
-                                />
-                                <Text fontSize={"sm"}>
-                                  <b>{"required: "}</b>
-
-                                  {i.requirement.toString()}
+                                />{" "}
+                                <b>{"required: "}</b>
+                                <Text>
+                                  {i.requirement.toString().replace(/,/g, ", ")}
                                 </Text>
                               </HStack>
                             </VStack>
                             <Badge variant="outline">{i.culture}</Badge>
-                          </HStack>
+                          </Flex>
                         </TabPanel>
                       );
                     })}
                 </TabPanels>
               </Tabs>
-              {isTransforming ? (
+              {isTransforming &&
+              !tranformStore.fsMap.has(
+                exploreStore.metaphor.mid + selectTab.tid
+              ) ? ( //加载某个tab时其他tab内容不受影响
                 <Center h={"100%"}>
                   <Spinner
                     speed="0.8s"
@@ -717,49 +726,45 @@ export default function Exchange() {
                     size={"xl"}
                   />
                 </Center>
-              ) : // wait for the useEffect ending
-
-              tranformStore.fsMap.has(
-                  exploreStore.metaphor.mid + selectTab.tid
-                ) ? (
-                tranformStore.fsMap
-                  .get(exploreStore.metaphor.mid + selectTab.tid)!
-                  .map((fm) => {
-                    return (
-                      <Metaphor
-                        key={fm.mid}
-                        mid={fm.mid}
-                        text={fm.text}
-                        normType={fm.normType}
-                        emotion={fm.emotion}
-                        meaning={fm.meaning}
-                        element={fm.element}
-                        history={exchangeStore.exchangesMap.get(fm.mid) ?? []}
-                        isForeign={true}
-                        isSelected={
-                          exploreStore.foreignMetaphor.text === fm.text
-                        }
-                        isActive={selectedM.mid === fm.mid}
-                        isChatting={
-                          selectedM.mid === fm.mid && currentOpt === "chat"
-                        }
-                        select={() => {
-                          //take in track
-                          exploreStore.setForeign([...fm.text]);
-                          //activate
-                          setSelectedM({
-                            mid: fm.mid,
-                            text: [...fm.text],
-                            meaning: [...fm.meaning],
-                            element: [...fm.element!],
-                            isForeign: true,
-                          });
-                        }}
-                      />
-                    );
-                  })
               ) : (
-                <></>
+                // wait for the useEffect ending
+
+                (
+                  tranformStore.fsMap.get(
+                    exploreStore.metaphor.mid + selectTab.tid
+                  ) ?? []
+                ).map((fm) => {
+                  return (
+                    <Metaphor
+                      key={fm.mid}
+                      mid={fm.mid}
+                      text={fm.text}
+                      normType={fm.normType}
+                      emotion={fm.emotion}
+                      meaning={fm.meaning}
+                      element={fm.element}
+                      history={exchangeStore.exchangesMap.get(fm.mid) ?? []}
+                      isForeign={true}
+                      isSelected={exploreStore.foreignMetaphor.text === fm.text}
+                      isActive={selectedM.mid === fm.mid}
+                      isChatting={
+                        selectedM.mid === fm.mid && currentOpt === "chat"
+                      }
+                      select={() => {
+                        //take in track
+                        exploreStore.setForeign([...fm.text]);
+                        //activate
+                        setSelectedM({
+                          mid: fm.mid,
+                          text: [...fm.text],
+                          meaning: [...fm.meaning],
+                          element: [...fm.element!],
+                          isForeign: true,
+                        });
+                      }}
+                    />
+                  );
+                })
               )}
             </Flex>
           ) : (

@@ -139,7 +139,7 @@ export default function Extension() {
     if (exploreStore.isCompleted()) {
       let head =
         "The translation path of traditional Chinese painting is: element (in a painting) --> symbol (in a certain way of rhetoric) --> foreign cultural symbol. ";
-      let tail: string = "\nQ: ";
+      let tail: string = "\n**Question**: ";
       if (opt === "Appropriate") {
         head += `Now I need your help to determine whether the current translation path is appropriate for me.`;
         tail += `Please help me determine whether the current translation path is appropriate for me.`;
@@ -153,9 +153,9 @@ export default function Extension() {
       const input = await translate(
         head +
           `\nThe following are descriptions of current conditions` +
-          `\nBackground: ` +
+          `\n**Background**: ` +
           settingStore.generateDesc() +
-          `\nTask: ` +
+          `\n**Task**: ` +
           exploreStore.generateTrack() +
           tail
       );
