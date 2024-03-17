@@ -16,10 +16,17 @@ import {
   Input,
   InputRightElement,
   IconButton,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  InputLeftElement,
+  Icon,
 } from "@chakra-ui/react";
 import { ExchangeItem, MetaphorType } from "../../vite-env";
 import {
   emotionIcon,
+  faqs,
   normColorMap,
   optIconMap,
   textBoxCfg,
@@ -31,8 +38,10 @@ import { useExchangeStore } from "../../stores/exchange";
 import { useEffect, useState } from "react";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import ImgPreviewer from "../ImgPreviewer/ImgPreviewer";
-import { chat, generateImg } from "../../utils/ai-requset";
+import { chat, generateImg, translate } from "../../utils/ai-requset";
 import { useSettingStore } from "../../stores/setting";
+import { ChevronRightIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { useExploreStore } from "../../stores/explore";
 
 const textCfg = {
   fontSize: "xs",
@@ -56,7 +65,7 @@ interface ExchangeEntryProps {
   regenImg: () => void;
 }
 
-//TODO:单条用户操作历史
+//单条用户操作历史
 function ExchangeEntry(props: ExchangeEntryProps) {
   if (props.item.isLoading === true) {
     //loading态的信息
@@ -222,12 +231,17 @@ interface MetaphorProps extends MetaphorType {
   isChatting: boolean; //chating state，显示对话输入框
   select: () => void;
 }
-//TODO:喻体对象组件
+//喻体对象组件
 export default function Metaphor(props: MetaphorProps) {
   const exchangeStore = useExchangeStore();
   const settingStore = useSettingStore();
+  const exploreStore = useExploreStore();
   const [inputMsg, setMsg] = useState<string>("");
   const [isWaiting, setWaiting] = useState<boolean>(false);
+  const [isProducing, setProducing] = useState<{ id: number; state: boolean }>({
+    id: 0,
+    state: false,
+  });
 
   useEffect(() => {
     //加载定义(第一条)
@@ -319,6 +333,28 @@ export default function Metaphor(props: MetaphorProps) {
       content: [inputMsg, answer],
     });
     setWaiting(false);
+  }
+
+  //使用模板提问（进行翻译后填充）
+  async function fillWithTemplate(id: number) {
+    setMsg("loading...");
+    setProducing({ id: id, state: true });
+    let question = ``;
+    switch (id) {
+      case 1:
+        question = `What exactly is ${props.text[1]}?`;
+        break;
+      case 2:
+        question = `Please explain the specific relationship between ${
+          props.element ? props.element[1] : exploreStore.noumenon.text[1]
+        } and ${props.text[1]}.`;
+        break;
+      case 3:
+        question = `I want to know more about ${props.text[1]}.`;
+        break;
+    }
+    setMsg(await translate(settingStore.culture, question));
+    setProducing({ id: 0, state: false });
   }
 
   return (
@@ -415,7 +451,47 @@ export default function Metaphor(props: MetaphorProps) {
               <SlideFade in={props.isChatting} style={{ width: "100%" }}>
                 <Flex align={"start"} gap={1} w={"100%"}>
                   <Box w={5} />
-                  <InputGroup flexGrow={1} margin={"auto"}>
+                  <InputGroup
+                    flexGrow={1}
+                    margin={"auto"}
+                    position={"relative"} //防止menulist被其他symbol的Rhetoric Type和Emotion Type遮挡
+                    zIndex={10}
+                  >
+                    <InputLeftElement>
+                      <Menu closeOnSelect={false}>
+                        <MenuButton
+                          as={IconButton}
+                          aria-label="FAQ"
+                          title="templates"
+                          icon={<HamburgerIcon />}
+                          color={"gray.400"}
+                          size={"xs"}
+                          mt={-1.5}
+                          bgColor={"transparent"}
+                        />
+                        <MenuList fontSize={"xs"}>
+                          {faqs.map((faq) => {
+                            return (
+                              <MenuItem
+                                onClick={() => fillWithTemplate(faq.id)}
+                                key={faq.id}
+                                isDisabled={isProducing.state}
+                                icon={
+                                  isProducing.state &&
+                                  isProducing.id === faq.id ? (
+                                    <Spinner size="xs" speed="1s" />
+                                  ) : (
+                                    <Icon as={ChevronRightIcon} boxSize={4} />
+                                  )
+                                }
+                              >
+                                {faq.content}
+                              </MenuItem>
+                            );
+                          })}
+                        </MenuList>
+                      </Menu>
+                    </InputLeftElement>
                     <Input
                       value={inputMsg}
                       pr={9}

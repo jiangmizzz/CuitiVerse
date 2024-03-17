@@ -49,6 +49,21 @@ export const emotionIcon = new Map<emotionType, string>([
   ["Positive", positiveIcon],
 ]);
 
+export const faqs: { id: number; content: string }[] = [
+  {
+    id: 1,
+    content: "What is ... ?",
+  },
+  {
+    id: 2,
+    content: "Relations between ... and ... ",
+  },
+  {
+    id: 3,
+    content: "More about the symbol ...",
+  },
+];
+
 //样式配置
 export const textBoxCfg = {
   borderWidth: 1,

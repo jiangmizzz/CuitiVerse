@@ -47,7 +47,11 @@ export async function translate(
     },
     {
       role: "user",
-      content: `Please translate the following text into the language of ${background}, and keep the format unchanged: ${text}`,
+      content: `Please translate the following text into the language of ${background}(if the country has more than one language, select the traditional language that is currently spoken by the most local people), and keep the format unchanged: ${text}`,
+    },
+    {
+      role: "user",
+      content: `Note: you should not provide any extra sentences or words other than translation results!`,
     },
   ] as ChatCompletionMessageParam[];
   return chat(context);
