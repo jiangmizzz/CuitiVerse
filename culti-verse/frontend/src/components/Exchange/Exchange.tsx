@@ -267,7 +267,7 @@ export default function Exchange() {
             keeping: keepings as conditionType[],
             requirement: requirement as conditionType[],
           });
-          //如果是第一个tab，则手动设置tid，否则保持原样
+          //手动设置tid，默认每次转化后转换到最新生成的tab内容
           if (newTid === "1") {
             setTab({ index: 0, tid: newTid });
           } else {
@@ -341,14 +341,14 @@ export default function Exchange() {
             {
               //背景描述
               role: "user",
-              content: `In Chinese culture, there is a 'Norm', which consists of the following form:\n 
-              {\n
-                element: 猴,Monkey; \n
-                rhetoric: Homophony; \n
-                symbol: 侯,Marquis;\n
-                custom: Monkey(猴 hóu) and marquis(侯 hóu) sound the same in Chinese, wishing each other to be promoted as officials;\n
-                emotion: Positive.\n
-              }\n`,
+              content: `In Chinese culture, there is a 'Norm', which consists of the following form:
+              {
+                element: 猴,Monkey; 
+                rhetoric: Homophony; 
+                symbol: 侯,Marquis;
+                custom: Monkey(猴 hóu) and marquis(侯 hóu) sound the same in Chinese, wishing each other to be promoted as officials;
+                emotion: Positive.
+              }`,
             },
             {
               //提供转译中的自变量(keepings)和因变量(required)
@@ -371,7 +371,7 @@ export default function Exchange() {
               }[]
               </code>\n
               (Here are the definitions of the options of rehtoric, which help you to select a suitable one among them: 
-              Iconic: The form of the sign is connected to its meaning; 
+              Iconic: Symbol is the same as the original meaning of element;
               Homophony: Two different words have the same pronunciation but different meanings, origins, or spelling; 
               Homophonic pun: A type of pun that exploits the fact that words sound similar but have different meanings; 
               Synonym: A word that means exactly or nearly the same as another word; 
@@ -745,14 +745,21 @@ export default function Exchange() {
                       element={fm.element}
                       history={exchangeStore.exchangesMap.get(fm.mid) ?? []}
                       isForeign={true}
-                      isSelected={exploreStore.foreignMetaphor.text === fm.text}
+                      isSelected={exploreStore.foreignMetaphor.mid === fm.mid}
                       isActive={selectedM.mid === fm.mid}
                       isChatting={
                         selectedM.mid === fm.mid && currentOpt === "chat"
                       }
                       select={() => {
                         //take in track
-                        exploreStore.setForeign([...fm.text]);
+                        exploreStore.setForeign({
+                          mid: fm.mid,
+                          text: fm.text,
+                          normType: fm.normType,
+                          emotion: fm.emotion,
+                          meaning: fm.meaning,
+                          element: fm.element,
+                        });
                         //activate
                         setSelectedM({
                           mid: fm.mid,

@@ -43,10 +43,7 @@ export interface ExploreTrack {
   noumenon: { nid: string; text: string[] }; //物像
   //喻体
   metaphor: MetaphorType;
-  foreignMetaphor: {
-    //喻体转译
-    text: string[];
-  };
+  foreignMetaphor: MetaphorType;
 }
 
 export interface Node {

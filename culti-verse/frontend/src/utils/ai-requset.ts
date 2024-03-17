@@ -34,3 +34,21 @@ export async function chat(
   }
   return res.choices[0].message.content!;
 }
+
+export async function translate(
+  background: string,
+  text: string
+): Promise<string> {
+  const context = [
+    {
+      role: "system",
+      content:
+        "Now you are a translator, required to translate content as accurately as possible.",
+    },
+    {
+      role: "user",
+      content: `Please translate the following text into the language of ${background}, and keep the format unchanged: ${text}`,
+    },
+  ] as ChatCompletionMessageParam[];
+  return chat(context);
+}
