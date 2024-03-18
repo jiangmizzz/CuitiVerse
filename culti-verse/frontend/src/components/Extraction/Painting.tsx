@@ -22,14 +22,24 @@ import {
   VStack,
   Divider,
   As,
+  Button,
+  Input,
+  ButtonGroup,
+  Image as CImage,
 } from "@chakra-ui/react";
 import { getFetcher, origin } from "../../utils/request";
 import ImgPreviewer from "../ImgPreviewer/ImgPreviewer";
 import { ArrowBackIcon, ChatIcon, EditIcon, ViewIcon } from "@chakra-ui/icons";
+import zoomInIcon from "../../assets/zoom_in.svg";
+import zoomOutIcon from "../../assets/zoom_out.svg";
+import cropIcon from "../../assets/crop.svg";
+import dragIcon from "../../assets/drag.svg";
 import useSWR from "swr";
+import Cropper, { ReactCropperElement } from "react-cropper";
 
 interface PaintingProps extends PaintingType {
   returnList: () => void;
+  addElement: (text: string, position: number[]) => void;
 }
 interface PaintingInfo {
   name: string[];
@@ -55,8 +65,13 @@ const attrCfg: {
 
 export default function Painting(props: PaintingProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cropperRef = useRef<ReactCropperElement>(null);
   const [showToolBar, setShow] = useState<boolean>(false);
   const [openModal, setOpen] = useState<boolean>(false);
+  const [openCropper, setCropper] = useState<boolean>(false);
+  const [elementName, setName] = useState<string>("");
+  const [newRect, setNewRect] = useState<number[]>([]);
+
   //渲染canvas
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -127,6 +142,20 @@ export default function Painting(props: PaintingProps) {
     openModal ? `/pic/info/${props.pid}` : null,
     getFetcher<PaintingInfo>
   );
+
+  //动态更改框选部分的数据
+  function onCrop() {
+    const cropper = cropperRef.current!.cropper;
+    const cropData = cropper.getData();
+    const imgData = cropper.getImageData();
+    setNewRect([
+      cropData.x / imgData.naturalWidth,
+      cropData.y / imgData.naturalHeight,
+      cropData.width / imgData.naturalWidth,
+      cropData.height / imgData.naturalHeight,
+    ]);
+  }
+
   return (
     <VStack
       h={"100%"}
@@ -135,6 +164,7 @@ export default function Painting(props: PaintingProps) {
       onMouseLeave={() => setShow(false)}
       spacing={0}
     >
+      {/* painting info modal */}
       <Modal
         size={"lg"}
         isOpen={openModal}
@@ -201,6 +231,120 @@ export default function Painting(props: PaintingProps) {
           )
         )}
       </Modal>
+      {/* select modal */}
+      <Modal
+        size={"xl"}
+        isOpen={openCropper}
+        onClose={() => setCropper(false)}
+        isCentered
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader py={2} bgColor={"gray.200"} borderTopRadius={"md"}>
+            Select Frame
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <VStack align={"start"} spacing={3} mt={3}>
+              <Flex w={"100%"} justifyContent={"space-between"}>
+                <HStack>
+                  <Text as={"b"}>{"Element: "}</Text>
+                  <Input
+                    size={"sm"}
+                    value={elementName}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </HStack>
+                {/* toolbar */}
+                <HStack>
+                  <ButtonGroup colorScheme="teal" size="sm" isAttached>
+                    <Tooltip label="Move mode" placement="top">
+                      <IconButton
+                        aria-label={"move"}
+                        icon={
+                          <CImage src={dragIcon} w={4} objectFit={"contain"} />
+                        }
+                        onClick={() =>
+                          cropperRef.current?.cropper.setDragMode("move")
+                        }
+                      />
+                    </Tooltip>
+                    <Tooltip label="Crop mode" placement="top">
+                      <IconButton
+                        aria-label={"crop"}
+                        icon={
+                          <CImage src={cropIcon} w={5} objectFit={"contain"} />
+                        }
+                        onClick={() =>
+                          cropperRef.current?.cropper.setDragMode("crop")
+                        }
+                      />
+                    </Tooltip>
+                  </ButtonGroup>
+                  <ButtonGroup colorScheme="teal" size="sm" isAttached>
+                    <Tooltip label="Zoom in" placement="top">
+                      <IconButton
+                        aria-label={"zoom in "}
+                        icon={
+                          <CImage
+                            src={zoomInIcon}
+                            w={5}
+                            objectFit={"contain"}
+                          />
+                        }
+                        onClick={() => cropperRef.current?.cropper.zoom(0.2)}
+                      />
+                    </Tooltip>
+
+                    <Tooltip label="Zoom out" placement="top">
+                      <IconButton
+                        aria-label={"zoom out "}
+                        icon={
+                          <CImage
+                            src={zoomOutIcon}
+                            w={5}
+                            objectFit={"contain"}
+                          />
+                        }
+                        onClick={() => cropperRef.current?.cropper.zoom(-0.2)}
+                      />
+                    </Tooltip>
+                  </ButtonGroup>
+                </HStack>
+              </Flex>
+              <Cropper
+                // src={origin+props.src}
+                src={
+                  "https://raw.githubusercontent.com/roadmanfong/react-cropper/master/example/img/child.jpg"
+                }
+                style={{ height: "100%", width: "100%" }}
+                // Cropper.js options
+                initialAspectRatio={1}
+                dragMode="move"
+                // guides={false}
+                crop={onCrop}
+                ref={cropperRef}
+                viewMode={1}
+              />
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <HStack>
+              <Button onClick={() => setCropper(false)}>Cancel</Button>
+              <Button
+                colorScheme="teal"
+                isDisabled={elementName === ""}
+                onClick={() => {
+                  props.addElement(elementName, [...newRect]);
+                  setCropper(false);
+                }}
+              >
+                Add
+              </Button>
+            </HStack>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
       {/* toolbar */}
       <Flex
         h={10}
@@ -251,6 +395,7 @@ export default function Painting(props: PaintingProps) {
             {...btnCfg}
             aria-label={"frame selection"}
             icon={<EditIcon />}
+            onClick={() => setCropper(true)}
           />
         </Tooltip>
       </Flex>
