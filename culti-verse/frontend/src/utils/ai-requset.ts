@@ -23,7 +23,7 @@ export async function chat(
     res = await openai.chat.completions.create({
       model: "gpt-4-vision-preview", //只有这个medel能图生文字
       messages: context,
-      max_tokens: 200,
+      max_tokens: 300,
     });
   } else {
     res = await openai.chat.completions.create({
