@@ -21,6 +21,7 @@
     "markdown-it": "^14.0.0",
     "openai": "^4.26.0",
     "react": "^18.2.0",
+    "react-cropper": "^2.3.3",
     "react-dom": "^18.2.0",
     "react-photo-view": "^1.2.4",
     "react-router-dom": "^6.21.3",
