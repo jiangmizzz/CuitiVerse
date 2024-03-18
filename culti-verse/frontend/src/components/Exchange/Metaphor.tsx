@@ -498,7 +498,12 @@ export default function Metaphor(props: MetaphorProps) {
                       size={"sm"}
                       onChange={(e) => setMsg(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
+                        if (
+                          e.key === "Enter" &&
+                          !e.shiftKey &&
+                          inputMsg !== "" &&
+                          !isWaiting
+                        ) {
                           e.preventDefault();
                           handleSend();
                         }
