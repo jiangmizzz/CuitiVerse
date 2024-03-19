@@ -563,7 +563,7 @@ export default function Exchange() {
                   size={"xl"}
                 />
               </Center>
-            ) : (
+            ) : metaphorsData?.length !== 0 ? (
               (metaphorsData ?? []).map((m) => {
                 return (
                   <Metaphor
@@ -600,6 +600,10 @@ export default function Exchange() {
                   />
                 );
               })
+            ) : (
+              <Flex h={"100%"} color={"gray.300"} align={"center"}>
+                The element has no symbols
+              </Flex>
             )
           ) : (
             <Flex h={"100%"} color={"gray.300"} align={"center"}>

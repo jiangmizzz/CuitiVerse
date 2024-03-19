@@ -26,10 +26,17 @@ import {
   Input,
   ButtonGroup,
   Image as CImage,
+  useToast,
 } from "@chakra-ui/react";
 import { getFetcher, origin } from "../../utils/request";
 import ImgPreviewer from "../ImgPreviewer/ImgPreviewer";
-import { ArrowBackIcon, ChatIcon, EditIcon, ViewIcon } from "@chakra-ui/icons";
+import {
+  ArrowBackIcon,
+  ChatIcon,
+  EditIcon,
+  RepeatIcon,
+  ViewIcon,
+} from "@chakra-ui/icons";
 import zoomInIcon from "../../assets/zoom_in.svg";
 import zoomOutIcon from "../../assets/zoom_out.svg";
 import cropIcon from "../../assets/crop.svg";
@@ -39,7 +46,7 @@ import Cropper, { ReactCropperElement } from "react-cropper";
 
 interface PaintingProps extends PaintingType {
   returnList: () => void;
-  addElement: (text: string, position: number[]) => void;
+  addElement: (text: string, position: number[]) => Promise<void>;
 }
 interface PaintingInfo {
   name: string[];
@@ -66,23 +73,23 @@ const attrCfg: {
 export default function Painting(props: PaintingProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cropperRef = useRef<ReactCropperElement>(null);
+  const toast = useToast();
   const [showToolBar, setShow] = useState<boolean>(false);
   const [openModal, setOpen] = useState<boolean>(false);
   const [openCropper, setCropper] = useState<boolean>(false);
   const [elementName, setName] = useState<string>("");
   const [newRect, setNewRect] = useState<number[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
   //渲染canvas
   useEffect(() => {
-    const canvas = canvasRef.current!;
-    const context: CanvasRenderingContext2D = canvas.getContext("2d")!;
-    const fontSize = 16;
-
     const img = new Image();
     img.src = origin + props.src;
-    //设置 Canvas 的显示大小与实际大小一致
 
     img.onload = function () {
+      const canvas = canvasRef.current!;
+      const context: CanvasRenderingContext2D = canvas.getContext("2d")!;
+      const fontSize = 16;
       // 清空画布               //画布大小
       context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
@@ -135,8 +142,7 @@ export default function Painting(props: PaintingProps) {
         }
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [props.noumenons, props.src]);
 
   const { data: infoData, isLoading: infoLoading } = useSWR<PaintingInfo>(
     openModal ? `/pic/info/${props.pid}` : null,
@@ -154,6 +160,22 @@ export default function Painting(props: PaintingProps) {
       cropData.width / imgData.naturalWidth,
       cropData.height / imgData.naturalHeight,
     ]);
+  }
+  //提交新选框
+  async function handleSubmit() {
+    setLoading(true);
+    await props.addElement(elementName, [...newRect]);
+    setLoading(false);
+    toast({
+      title: "Add element successfully!",
+      variant: "subtle",
+      status: "success",
+      duration: 1500,
+      position: "top",
+      isClosable: true,
+    });
+    setName("");
+    setCropper(false);
   }
 
   return (
@@ -241,7 +263,7 @@ export default function Painting(props: PaintingProps) {
         <ModalOverlay />
         <ModalContent>
           <ModalHeader py={2} bgColor={"gray.200"} borderTopRadius={"md"}>
-            Select Frame
+            {"Add element"}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
@@ -257,6 +279,15 @@ export default function Painting(props: PaintingProps) {
                 </HStack>
                 {/* toolbar */}
                 <HStack>
+                  <Tooltip label="Reset" placement="top">
+                    <IconButton
+                      colorScheme="teal"
+                      size="sm"
+                      aria-label={"reset"}
+                      icon={<RepeatIcon />}
+                      onClick={() => cropperRef.current?.cropper.reset()}
+                    />
+                  </Tooltip>
                   <ButtonGroup colorScheme="teal" size="sm" isAttached>
                     <Tooltip label="Move mode" placement="top">
                       <IconButton
@@ -313,10 +344,8 @@ export default function Painting(props: PaintingProps) {
                 </HStack>
               </Flex>
               <Cropper
-                // src={origin+props.src}
-                src={
-                  "https://raw.githubusercontent.com/roadmanfong/react-cropper/master/example/img/child.jpg"
-                }
+                src={origin + props.src}
+                checkCrossOrigin={false}
                 style={{ height: "100%", width: "100%" }}
                 // Cropper.js options
                 initialAspectRatio={1}
@@ -334,10 +363,8 @@ export default function Painting(props: PaintingProps) {
               <Button
                 colorScheme="teal"
                 isDisabled={elementName === ""}
-                onClick={() => {
-                  props.addElement(elementName, [...newRect]);
-                  setCropper(false);
-                }}
+                isLoading={loading}
+                onClick={handleSubmit}
               >
                 Add
               </Button>
@@ -390,7 +417,7 @@ export default function Painting(props: PaintingProps) {
             onClick={() => setOpen(true)}
           />
         </Tooltip>
-        <Tooltip label="Select by yourself" placement="top">
+        <Tooltip label="Add elements" placement="top">
           <IconButton
             {...btnCfg}
             aria-label={"frame selection"}
