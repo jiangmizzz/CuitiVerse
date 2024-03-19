@@ -5,18 +5,7 @@ import { useEffect } from "react";
 import { Box } from "@chakra-ui/react";
 import icon from "../../assets/logo.png";
 import { CloudData } from "../../vite-env";
-
-//字体配色
-const fontColor = [
-  "dbbe9a",
-  "94617b",
-  "a0c1d2",
-  "96a48b",
-  "939391",
-  "eba79c",
-  "b0a7d7",
-  "d7c3b8",
-];
+import { seriesColorMap } from "../../stores/maps";
 
 const seriesCfg = {
   type: "wordCloud",
@@ -24,7 +13,7 @@ const seriesCfg = {
   keepAspect: false, //图像比例
 
   // Text size range
-  sizeRange: [5, 16],
+  sizeRange: [8, 16],
 
   //文字旋转角, range [-90, 90] by rotationStep 45
   rotationRange: [0, 0],
@@ -79,7 +68,7 @@ export default function Cloud(props: {
         {
           ...seriesCfg,
           //图像在画布中的位置
-          left: "0",
+          left: "20",
           top: "0",
           width: "50%",
           height: "60%",
@@ -87,7 +76,7 @@ export default function Cloud(props: {
           // Data is an array. Each array item must have name and value property.
           textStyle: {
             color: function () {
-              return "#" + fontColor[0];
+              return seriesColorMap.get("Animal");
             },
           },
           data: props.data.filter((d) => d.type === "Animal")[0].data,
@@ -102,7 +91,7 @@ export default function Cloud(props: {
           // Data is an array. Each array item must have name and value property.
           textStyle: {
             color: function () {
-              return "#" + fontColor[3];
+              return seriesColorMap.get("Plant");
             },
           },
           data: props.data.filter((d) => d.type === "Plant")[0].data,
@@ -116,7 +105,7 @@ export default function Cloud(props: {
           maskImage: maskImage,
           textStyle: {
             color: function () {
-              return "#" + fontColor[2];
+              return seriesColorMap.get("Fruit");
             },
           },
           // Data is an array. Each array item must have name and value property.
@@ -131,7 +120,7 @@ export default function Cloud(props: {
           maskImage: maskImage,
           textStyle: {
             color: function () {
-              return "#" + fontColor[6];
+              return seriesColorMap.get("Other");
             },
           },
           // Data is an array. Each array item must have name and value property.

@@ -49,6 +49,25 @@ export const emotionIcon = new Map<emotionType, string>([
   ["Positive", positiveIcon],
 ]);
 
+//词云和网络图配色
+export const seriesColorMap = new Map<string, string>([
+  //常规色 - border
+  ["Animal", "#dbbe9a"],
+  ["Plant", "#96a48b"],
+  ["Fruit", "#a0c1d2"],
+  ["Other", "#6682a8"],
+  //bgcolor
+  ["Animalb", "#dfdbbc"],
+  ["Plantb", "#c2ddac"],
+  ["Fruitb", "#a9d2e6"],
+  ["Otherb", "#8a9eba"],
+  //chosen bgcolor
+  ["Animalcb", "#ecefde"],
+  ["Plantcb", "#d4e4c7"],
+  ["Fruitcb", "#c9e0ec"],
+  ["Othercb", "#aac0df"],
+]);
+
 export const faqs: { id: number; content: string }[] = [
   {
     id: 1,

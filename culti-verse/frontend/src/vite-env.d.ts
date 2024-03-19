@@ -50,6 +50,7 @@ export interface Node {
   id: string; //nid
   value: number; //物像数量
   label: string; //标签，即物像名
+  type: seriesType; //物像所属类别
 }
 
 export interface Edge {
