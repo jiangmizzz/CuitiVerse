@@ -3,6 +3,7 @@ package controller
 import (
 	"CVB/api/dto"
 	"CVB/dao"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -128,13 +129,43 @@ func GetPicGetHandler(c *gin.Context) {
 
 	var combinations []dto.Combinations
 	for _, comb := range paintingDetail.Combinations {
+		var metaphors []dto.MetaphorCount
+		// 假设 metaphors 是一个 dto.MetaphorCount 类型的切片
+		// 创建一个映射来跟踪不同类型的隐喻和它们的数量
+		metaphorMap := make(map[string]*dto.MetaphorCount)
+
+		for _, m := range comb.Metaphors {
+			// 检查这个类型的隐喻是否已经在我们的映射中
+			if _, exists := metaphorMap[m.Type]; exists {
+			} else {
+				// 定义一个变量来保存处理后的字符串
+				var capitalizedtype string
+
+				// 检查category是否非空
+				if len(m.Type) > 0 {
+					capitalizedtype = strings.ToUpper(m.Type[:1]) + m.Type[1:]
+				} else {
+					capitalizedtype = ""
+				}
+				// 如果不存在，创建一个新的条目并添加到映射中
+				metaphorMap[m.Type] = &dto.MetaphorCount{
+					Type:  capitalizedtype,
+					Count: m.Count,
+				}
+			}
+		}
+
+		// 现在将映射转换回切片
+		metaphors = make([]dto.MetaphorCount, 0, len(metaphorMap))
+		for _, mc := range metaphorMap {
+			metaphors = append(metaphors, *mc)
+		}
+
 		combinations = append(combinations, dto.Combinations{
-			Noumenon: dto.Noumenon{
-				NID:  comb.Noumenon.NID,
-				Name: comb.Noumenon.Name,
-				// Assuming Metaphors conversion if needed
-			},
-			Elements: comb.Elements,
+			NID:       comb.Noumenon.NID,
+			Name:      [2]string{comb.Noumenon.Name, comb.Noumenon.Name_e},
+			Metaphors: metaphors,
+			Elements:  comb.Elements,
 		})
 	}
 
@@ -197,6 +228,12 @@ func GetPicMetaphorsHandler(c *gin.Context) {
 		NID:  c.Query("nid"),
 		Name: c.Query("name"),
 	}
+	singleFlag := 0
+	req.NID = strings.ReplaceAll(req.NID, " ", "+")
+	if !strings.Contains(req.NID, "+") {
+		singleFlag = 1
+	}
+	fmt.Println(singleFlag)
 	// Set default values if parameters are not provided
 	if req.NID == "" {
 		req.NID = "defaultNid"
@@ -205,6 +242,7 @@ func GetPicMetaphorsHandler(c *gin.Context) {
 		req.Name = "defaultName"
 	}
 	metaphors, err := dao.GetPicMetaphors(req)
+	fmt.Println(metaphors)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, dto.ResponseType[dto.PicMetaphorsResp]{
 			Success: false,
@@ -219,7 +257,8 @@ func GetPicMetaphorsHandler(c *gin.Context) {
 	var metaphorsDTO dto.PicMetaphorsResp
 	for _, m := range metaphors {
 		// 创建一个新的 Metaphor 结构体实例，并设置其字段
-		if strings.Contains(m.MID, "+") {
+		if strings.Contains(m.MID, "+") && singleFlag == 1 {
+
 			continue
 		}
 		// 定义一个变量来保存处理后的字符串
@@ -256,6 +295,16 @@ func GetPicMetaphorsHandler(c *gin.Context) {
 
 	// 将 DTO 数组包装到响应结构体中
 	resp := metaphorsDTO
+
+	// 如果没有找到喻体，则返回空数组
+	if len(metaphors) == 0 {
+		c.JSON(http.StatusOK, dto.ResponseType[dto.PicMetaphorsResp]{
+			Success: true,
+			Data:    dto.PicMetaphorsResp{}, // 返回空数组
+			ErrCode: 0,
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, dto.ResponseType[dto.PicMetaphorsResp]{
 		Success: true,
@@ -315,19 +364,26 @@ func PicAddHandler(c *gin.Context) {
 		Name:      PicAddDB.NewNoumenon.Name,
 		Metaphors: []dto.MetaphorCount{},
 	}
+	// 使用一个map来存储每种类型的喻体及其计数
+	metaphorCounts := make(map[string]int)
 	for _, metaphor := range PicAddDB.NewNoumenon.Metaphors {
-		// 定义一个变量来保存处理后的字符串
+		// 标准化类型名称
 		var capitalizedType string
-
-		// 检查category是否非空
 		if len(metaphor.Type) > 0 {
 			capitalizedType = strings.ToUpper(metaphor.Type[:1]) + metaphor.Type[1:]
 		} else {
-			capitalizedType = ""
+			continue // 如果类型为空，则跳过这个喻体
 		}
+
+		// 累加喻体的计数
+		metaphorCounts[capitalizedType] = metaphor.Count
+	}
+
+	// 将累计的结果转换为MetaphorCount数组
+	for typ, count := range metaphorCounts {
 		newNoumenon.Metaphors = append(newNoumenon.Metaphors, dto.MetaphorCount{
-			Type:  capitalizedType,
-			Count: metaphor.Count,
+			Type:  typ,
+			Count: count,
 		})
 	}
 
@@ -339,25 +395,39 @@ func PicAddHandler(c *gin.Context) {
 			Name:      combo.Noumenon.Name,
 			Metaphors: []dto.MetaphorCount{},
 		}
+		// 为当前Noumenon清空并重新计算MetaphorCounts
+		metaphorCounts = make(map[string]int)
 		for _, metaphor := range combo.Noumenon.Metaphors {
-			// 定义一个变量来保存处理后的字符串
+			// 标准化类型名称
 			var capitalizedType string
-
-			// 检查category是否非空
 			if len(metaphor.Type) > 0 {
 				capitalizedType = strings.ToUpper(metaphor.Type[:1]) + metaphor.Type[1:]
 			} else {
-				capitalizedType = ""
+				continue // 如果类型为空，则跳过这个喻体
 			}
+
+			// 累加喻体的计数
+			metaphorCounts[capitalizedType] = metaphor.Count
+		}
+
+		// 将累计的结果转换为MetaphorCount数组
+		for typ, count := range metaphorCounts {
 			convertedNoumenon.Metaphors = append(convertedNoumenon.Metaphors, dto.MetaphorCount{
-				Type:  capitalizedType,
-				Count: metaphor.Count,
+				Type:  typ,
+				Count: count,
 			})
 		}
 		combinations = append(combinations, dto.Combinations{
-			Noumenon: convertedNoumenon,
-			Elements: combo.Elements,
+			NID:       convertedNoumenon.NID,
+			Name:      convertedNoumenon.Name,
+			Metaphors: convertedNoumenon.Metaphors,
+			Elements:  strings.Split(convertedNoumenon.NID, "+"),
 		})
+	}
+
+	// 如果combinations为空，则初始化为空数组
+	if combinations == nil {
+		combinations = []dto.Combinations{} // 根据CombinationType的具体类型修改
 	}
 
 	// 返回处理过后的响应

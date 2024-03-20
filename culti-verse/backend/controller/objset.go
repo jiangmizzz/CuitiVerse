@@ -32,7 +32,7 @@ func GetObjsetCloudHandler(c *gin.Context) {
 		// 初始化特定类型的数据切片
 		categorizedCloud[n.Category] = append(categorizedCloud[n.Category], dto.Data{
 			Value: n.TIMES,
-			Name:  n.Name,
+			Name:  n.Name_e,
 			NID:   n.NID,
 		})
 	}
@@ -93,10 +93,21 @@ func GetObjsetGetHandler(c *gin.Context) {
 
 	// 填充 Nodes
 	for i, modelNode := range objset.Nodes {
+
+		// 定义一个变量来保存处理后的字符串
+		var Type_e string
+
+		// 检查category是否非空
+		if len(modelNode.Type) > 0 {
+			Type_e = strings.ToUpper(modelNode.Type[:1]) + modelNode.Type[1:]
+		} else {
+			Type_e = ""
+		}
 		dtoResp.Nodes[i] = dto.Node{
 			ID:    modelNode.ID,
 			Value: modelNode.Value,
 			Label: modelNode.Label,
+			Type:  Type_e,
 		}
 	}
 

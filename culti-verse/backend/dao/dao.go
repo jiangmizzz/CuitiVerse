@@ -4,6 +4,7 @@ import (
 	"CVB/api/dto"
 	"CVB/model"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -48,6 +49,7 @@ func GetPicList(nidReq dto.PicListReq) ([]model.Painting, error) {
 	return paintings, nil
 }
 
+// 根据pid获取一幅画作的详细信息
 func GetPaintingByID(pid dto.PicGetReq) (*model.DetailedPainting, error) {
 	// Step 1: 获取基本的画作信息
 	var painting model.Painting
@@ -106,10 +108,54 @@ func GetPaintingByID(pid dto.PicGetReq) (*model.DetailedPainting, error) {
 		detailedPainting.Noumenons = append(detailedPainting.Noumenons, detailedNoumenon)
 	}
 
-	// TODO: Step 4: 处理Combinations，根据你的业务逻辑来填充
+	// Step 4: 处理Combinations
 	var combinations []model.Combination
-	detailedPainting.Combinations = combinations
+	var groupNoumenons []model.GroupNoumenon
+	if err := db.Table("group_noumenons").Where("PID = ?", PID).Find(&groupNoumenons).Error; err != nil {
+		fmt.Println("err4")
+		return nil, err
+	}
 
+	for _, gn := range groupNoumenons {
+		var noumenon model.Noumenon
+		var noumenonMetaphors []model.NoumenonMetaphor
+
+		// 获取组合物象对应的物象信息
+		sql3 := "SELECT * FROM noumenons WHERE NID = ?"
+		if err := db.Raw(sql3, gn.NID).Scan(&noumenon).Error; err != nil {
+			fmt.Println("err5")
+			return nil, err
+		}
+		// if err := db.Table("noumenons").Where("NID = ?", gn.NID).First(&noumenon).Error; err != nil {
+		// 	fmt.Println("err5")
+		// 	return nil, err
+		// }
+
+		// 获取对应物象的所有喻体信息
+		if err := db.Table("noumenon_metaphors").Where("NID = ?", gn.NID).Find(&noumenonMetaphors).Error; err != nil {
+			fmt.Println("err6")
+			return nil, err
+		}
+
+		// 构造Combination
+		combination := model.Combination{
+			Noumenon: noumenon,
+			Elements: strings.Split(gn.NID, "+"), // 将NID按"+"分割为元素列表
+		}
+
+		// 转换Metaphors
+		for _, metaphor := range noumenonMetaphors {
+			combination.Metaphors = append(combination.Metaphors, model.Metaphors{
+				Type:  metaphor.NormType_e,
+				Count: metaphor.COUNT,
+			})
+		}
+
+		// 添加到Combinations
+		combinations = append(combinations, combination)
+	}
+
+	detailedPainting.Combinations = combinations
 	return &detailedPainting, nil
 }
 
@@ -129,10 +175,13 @@ func GetPicInfoByID(pid dto.PicInfoReq) (*model.Painting, error) {
 func GetPicMetaphors(nid dto.PicMetaphorsReq) ([]model.Metaphor, error) {
 	var metaphors []model.Metaphor
 	NID := nid.NID // 从请求中获取 NID
+	fmt.Println("NID:", NID)
 	Name := nid.Name
 	if NID != "defaultNid" {
 		// 构造一个正则表达式模式，以匹配确切的 NID 后跟一个点或加号
 		// 这将确保 '11.' 不会与 '111.' 匹配
+		// 使用 regexp.QuoteMeta 转义 NID 中的所有特殊字符
+		NID = regexp.QuoteMeta(NID)
 		regexpPattern := fmt.Sprintf("^%s(\\.|\\+).*", NID)
 
 		// 在 metaphors 表中查找匹配的喻体
@@ -199,7 +248,7 @@ func GetObjsetGet(req dto.ObjsetGetReq) (model.ObjsetGet, error) {
 				if err != nil {
 					return objSet, err
 				}
-				nodeMap[id] = model.Node{ID: id, Value: noumenon.TIMES, Label: noumenon.Name}
+				nodeMap[id] = model.Node{ID: id, Value: noumenon.TIMES, Label: noumenon.Name_e, Type: noumenon.Category}
 			}
 		}
 
@@ -296,8 +345,8 @@ func PicAdd(PicAddNList dto.PicAddReq) (*model.PicAdd, error) {
 			Type  string `json:"type"`
 			Count int    `json:"count"`
 		}{
-			Type:  metaphor.NormType, // 将NormType映射到Type
-			Count: metaphor.COUNT,    // 将COUNT映射到Count
+			Type:  metaphor.NormType_e, // 将NormType映射到Type
+			Count: metaphor.COUNT,      // 将COUNT映射到Count
 		}
 		// 将转换后的元素添加到切片中
 		transformedMetaphors = append(transformedMetaphors, transformed)
@@ -308,10 +357,16 @@ func PicAdd(PicAddNList dto.PicAddReq) (*model.PicAdd, error) {
 	// 遍历validGroupNoumenon数组
 	for _, nid := range validGroupNoumenon {
 		var noumenonName string
+		var noumenonName_e string
 		var metaphors []model.NoumenonMetaphor
 
 		// 从noumenons表中根据NID获取Name
 		err := db.Table("noumenons").Where("NID = ?", nid).Select("Name").Row().Scan(&noumenonName)
+		if err != nil {
+			return nil, err
+		}
+		// 从noumenons表中根据NID获取Name
+		err = db.Table("noumenons").Where("NID = ?", nid).Select("Name_e").Row().Scan(&noumenonName_e)
 		if err != nil {
 			return nil, err
 		}
@@ -332,8 +387,8 @@ func PicAdd(PicAddNList dto.PicAddReq) (*model.PicAdd, error) {
 				Type  string `json:"type"`
 				Count int    `json:"count"`
 			}{
-				Type:  metaphor.NormType, // 将NormType映射到Type
-				Count: metaphor.COUNT,    // 将COUNT映射到Count
+				Type:  metaphor.NormType_e, // 将NormType映射到Type
+				Count: metaphor.COUNT,      // 将COUNT映射到Count
 			}
 			transformedMetaphors = append(transformedMetaphors, transformed)
 		}
@@ -341,7 +396,7 @@ func PicAdd(PicAddNList dto.PicAddReq) (*model.PicAdd, error) {
 		// 构造OnePicNoumenon实例
 		onePicNoumenon := model.OnePicNoumenon{
 			NID:       nid,
-			Name:      noumenonName,
+			Name:      [2]string{noumenonName, noumenonName_e},
 			Metaphors: transformedMetaphors,
 		}
 
@@ -356,7 +411,7 @@ func PicAdd(PicAddNList dto.PicAddReq) (*model.PicAdd, error) {
 	response := &model.PicAdd{
 		NewNoumenon: model.OnePicNoumenon{
 			NID:       lastNoumenon.NID,
-			Name:      lastNoumenon.Name,
+			Name:      [2]string{lastNoumenon.Name, lastNoumenon.Name_e},
 			Metaphors: transformedMetaphors,
 		},
 		Combination: combinations,
