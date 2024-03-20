@@ -355,7 +355,15 @@ export default function Extraction() {
         </Heading>
         <VStack spacing={0} align={"start"}>
           <HStack spacing={1.5}>
-            <Badge variant="solid" colorScheme="blackAlpha">
+            <Badge
+              variant="solid"
+              h={4}
+              w={4}
+              fontSize={"11px"}
+              fontFamily={"Arial"}
+              textAlign={"center"}
+              colorScheme="blackAlpha"
+            >
               {2}
             </Badge>
             <Text fontSize={"sm"}>{"Image Frequency"}</Text>
@@ -367,6 +375,7 @@ export default function Extraction() {
               h={4}
               w={4}
               fontSize={"11px"}
+              fontFamily={"Arial"}
               textAlign={"center"}
               bgColor={normColorMap.get("Homophony")}
             >

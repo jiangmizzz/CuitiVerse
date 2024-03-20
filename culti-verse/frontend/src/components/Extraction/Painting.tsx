@@ -105,7 +105,7 @@ export default function Painting(props: PaintingProps) {
       canvas.style.height = `${(imageHeight / imageWidth) * 240}px`;
 
       const scaleX = canvas.width / clientWidth;
-      context.font = `bold ${fontSize * scaleX}px Arial`;
+      context.font = `bold ${fontSize * scaleX}px Times New Roman`;
       // console.log(scaleX, scaleY);
 
       // 绘制图片到画布
@@ -130,7 +130,7 @@ export default function Painting(props: PaintingProps) {
           context.fillText(
             n.name[1],
             rect[0] * imageWidth + scaleX,
-            rect[1] * imageHeight - 2 * scaleX
+            rect[1] * imageHeight - 3.5 * scaleX
           );
           //绘制选框
           context.strokeRect(
@@ -281,14 +281,14 @@ export default function Painting(props: PaintingProps) {
                 <HStack>
                   <Tooltip label="Reset" placement="top">
                     <IconButton
-                      colorScheme="teal"
+                      colorScheme="gray"
                       size="sm"
                       aria-label={"reset"}
                       icon={<RepeatIcon />}
                       onClick={() => cropperRef.current?.cropper.reset()}
                     />
                   </Tooltip>
-                  <ButtonGroup colorScheme="teal" size="sm" isAttached>
+                  <ButtonGroup colorScheme="gray" size="sm" isAttached>
                     <Tooltip label="Move mode" placement="top">
                       <IconButton
                         aria-label={"move"}
@@ -312,7 +312,7 @@ export default function Painting(props: PaintingProps) {
                       />
                     </Tooltip>
                   </ButtonGroup>
-                  <ButtonGroup colorScheme="teal" size="sm" isAttached>
+                  <ButtonGroup colorScheme="gray" size="sm" isAttached>
                     <Tooltip label="Zoom in" placement="top">
                       <IconButton
                         aria-label={"zoom in "}

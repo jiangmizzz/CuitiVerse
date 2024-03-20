@@ -79,7 +79,15 @@ export default function Noumenon(props: NoumenonProps) {
       <HStack align={"end"} justify={"space-between"} w={"90%"}>
         {/* 物像出现次数 */}
         {props.type === "single" ? (
-          <Badge variant="solid" px={0.5} colorScheme="blackAlpha">
+          <Badge
+            variant="solid"
+            h={4}
+            w={4}
+            fontSize={"11px"}
+            textAlign={"center"}
+            fontFamily={"Arial"}
+            colorScheme="blackAlpha"
+          >
             {props.occurences.length}
           </Badge>
         ) : (
@@ -96,6 +104,7 @@ export default function Noumenon(props: NoumenonProps) {
                 h={4}
                 w={4}
                 fontSize={"11px"}
+                fontFamily={"Arial"}
                 textAlign={"center"}
                 bgColor={normColorMap.get(m.type)}
               >
@@ -112,7 +121,7 @@ export default function Noumenon(props: NoumenonProps) {
               style={{
                 width: "100%",
                 height: "100%",
-                backgroundColor: "#EDF2F7",
+                backgroundColor: "rgba(237, 242, 247, 0.6)",
               }}
               spaceBetween={30}
               slidesPerView={1}
@@ -158,7 +167,7 @@ export default function Noumenon(props: NoumenonProps) {
         <Tag
           w={"100%"}
           py={2.5}
-          bgColor={props.isSeleted ? "orange.100" : "transparent"}
+          bgColor={props.isSeleted ? "gray.100" : "transparent"}
           borderWidth={1}
           boxShadow={"base"}
           justifyContent={"center"}

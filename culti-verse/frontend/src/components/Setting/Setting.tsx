@@ -87,7 +87,12 @@ export default function Setting() {
     <>
       <Popover>
         <PopoverTrigger>
-          <Button size="sm" onClick={() => setOpen(!isOpen)}>
+          <Button
+            size="sm"
+            onClick={() => setOpen(!isOpen)}
+            fontFamily={"Avenir"}
+            opacity={0.7}
+          >
             <div style={{ width: "15em", textAlign: "start" }}>
               {"| Backround Setting"}
             </div>
@@ -97,9 +102,9 @@ export default function Setting() {
         <PopoverContent w={420} p={5}>
           <PopoverArrow />
           <PopoverBody>
-            <Stack spacing={2}>
+            <Stack spacing={2} fontFamily={"Times New Roman"}>
               <FormControl>
-                <FormLabel>{"Culture"}</FormLabel>
+                <FormLabel fontWeight={"bold"}>{"Culture"}</FormLabel>
                 <Input
                   size={"sm"}
                   placeholder="Enter your country"
@@ -110,7 +115,7 @@ export default function Setting() {
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>{"Age"}</FormLabel>
+                <FormLabel fontWeight={"bold"}>{"Age"}</FormLabel>
                 <NumberInput
                   min={0}
                   size={"sm"}
@@ -130,7 +135,7 @@ export default function Setting() {
                 </NumberInput>
               </FormControl>
               <FormControl>
-                <FormLabel>{"Education level"}</FormLabel>
+                <FormLabel fontWeight={"bold"}>{"Education level"}</FormLabel>
                 <Select
                   size="sm"
                   variant="filled"
@@ -152,7 +157,9 @@ export default function Setting() {
                 </Select>
               </FormControl>
               <FormControl>
-                <FormLabel>{"Understanding of Chinese culture"}</FormLabel>
+                <FormLabel fontWeight={"bold"}>
+                  {"Understanding of Chinese culture"}
+                </FormLabel>
                 <Slider
                   aria-label="Understanding of Chinese culture"
                   value={formValue.u1}
@@ -172,7 +179,7 @@ export default function Setting() {
               </FormControl>
 
               <FormControl>
-                <FormLabel>
+                <FormLabel fontWeight={"bold"}>
                   {"Understanding of traditional Chinese painting"}
                 </FormLabel>
                 <Slider
@@ -194,7 +201,7 @@ export default function Setting() {
                 </FormHelperText>
               </FormControl>
               <FormControl>
-                <FormLabel>
+                <FormLabel fontWeight={"bold"}>
                   <HStack>
                     <Text>{"Remark"}</Text>
                     <Text fontSize={"xs"} color={"gray.400"}>

@@ -13,6 +13,7 @@ const boxCfg = {
   rounded: "md",
   boxShadow: "base",
   overflow: "hidden",
+  fontFamily: "Times New Roman",
 };
 
 function BoxHeader(props: { title: string; position: "l" | "m" | "r" }) {
