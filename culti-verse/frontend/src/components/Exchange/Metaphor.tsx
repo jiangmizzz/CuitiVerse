@@ -18,12 +18,17 @@ import {
   IconButton,
 } from "@chakra-ui/react";
 import { ExchangeItem, MetaphorType } from "../../vite-env";
-import { normColorMap, optIconMap, textBoxCfg } from "../../stores/maps";
+import {
+  emotionIcon,
+  normColorMap,
+  optIconMap,
+  textBoxCfg,
+} from "../../stores/maps";
 import deleteIcon from "../../assets/delete.svg";
 import refreshIcon from "../../assets/refresh.svg";
 import send from "../../assets/send_msg.svg";
 import { useExchangeStore } from "../../stores/exchange";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import ImgPreviewer from "../ImgPreviewer/ImgPreviewer";
 import { chat, generateImg } from "../../utils/ai-requset";
@@ -51,7 +56,7 @@ interface ExchangeEntryProps {
   regenImg: () => void;
 }
 
-//单条用户操作历史
+//TODO:单条用户操作历史
 function ExchangeEntry(props: ExchangeEntryProps) {
   if (props.item.isLoading === true) {
     //loading态的信息
@@ -164,9 +169,24 @@ function ExchangeEntry(props: ExchangeEntryProps) {
           }
         </Box>
         <VStack>
-          <Tooltip label={"Delete"} placement="right">
-            <Image src={deleteIcon} {...btnCfg} onClick={props.delete} />
+          <Tooltip
+            label={
+              props.item.opt === "def" ? "Custom can not delete" : "Delete"
+            }
+            placement="right"
+          >
+            <Image
+              src={deleteIcon}
+              {...btnCfg}
+              onClick={() => {
+                if (props.item.opt !== "def") {
+                  props.delete();
+                }
+              }}
+              cursor={props.item.opt === "def" ? "not-allowed" : "pointer"}
+            />
           </Tooltip>
+
           {props.item.opt === "gen_img" && (
             <Tooltip label={"Regenerate"} placement="right">
               <Image src={refreshIcon} {...btnCfg} onClick={props.regenImg} />
@@ -186,12 +206,23 @@ interface MetaphorProps extends MetaphorType {
   isChatting: boolean; //chating state，显示对话输入框
   select: () => void;
 }
-//喻体对象组件
+//TODO:喻体对象组件
 export default function Metaphor(props: MetaphorProps) {
   const exchangeStore = useExchangeStore();
   const settingStore = useSettingStore();
   const [inputMsg, setMsg] = useState<string>("");
   const [isWaiting, setWaiting] = useState<boolean>(false);
+
+  useEffect(() => {
+    //加载定义(第一条)
+    if (!exchangeStore.exchangesMap.has(props.mid)) {
+      exchangeStore.addItem(props.mid, {
+        opt: "def",
+        content: props.meaning[0] + `\n` + props.meaning[1],
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   //重新生成图片
   async function handleRegenImg(id: number) {
@@ -204,7 +235,9 @@ export default function Metaphor(props: MetaphorProps) {
     const targetCulture = props.isForeign ? settingStore.culture : "China";
     const imgUrl = await generateImg(
       settingStore.generateDesc() +
-        `Please generate a schematic diagram of the image of the ${props.text} in the context of ${targetCulture} culture, which can make it easy for me to understand it.`
+        `Please generate a schematic diagram of the image of the ${
+          props.text[0] + "(" + props.text[1] + ")"
+        } in the context of ${targetCulture} culture, which can make it easy for me to understand it.`
     );
     //再次更换
     exchangeStore.replaceImg(props.mid, id, {
@@ -230,7 +263,9 @@ export default function Metaphor(props: MetaphorProps) {
     const messages = [
       {
         role: "system",
-        content: "This is the context of this conversation.",
+        content:
+          // "This conversation is about traditional Chinese painting.
+          "This is the context of this conversation.",
       },
       ...context,
       {
@@ -253,103 +288,126 @@ export default function Metaphor(props: MetaphorProps) {
   }
 
   return (
-    <VStack w={"100%"}>
-      <Flex w={"90%"} align={"center"}>
-        {props.normType && (
-          <Box
-            w={3}
-            h={3}
-            mr={-3}
-            rounded={"full"}
-            position={"relative"}
-            right={1.5}
-            bgColor={normColorMap.get(props.normType)}
-          />
-        )}
-        <Tag
-          w={"100%"}
-          py={2.5}
-          borderWidth={1}
-          boxShadow={"base"}
-          variant="outline"
-          bgColor={
-            props.isActive
-              ? "orange.200"
-              : props.isSelected
-              ? "orange.100"
-              : "transparent"
-          }
-          justifyContent={"center"}
-          cursor={"pointer"}
-          onClick={props.select}
-        >
+    <Flex w={"100%"} gap={2} align={"start"}>
+      {/* 对于foreign symbol，添加 element 部分 */}
+      {props.isForeign && (
+        <Tag flexGrow={1} borderWidth={1} py={2.5}>
           <TagLabel>
             <Flex align={"center"}>
-              <Heading as="h5" size="sm" textAlign={"center"} color={"black"}>
-                {props.text}
-              </Heading>
+              <Text fontSize="xl" textAlign={"center"} color={"black"}>
+                {props.element![0] + " / " + props.element![1]}
+              </Text>
             </Flex>
           </TagLabel>
         </Tag>
-      </Flex>
-      {/* 防止产生额外的spacing */}
-      {(props.history.length > 0 || props.isChatting) && (
-        <VStack w={"100%"}>
-          {props.history.map((e) => {
-            return (
-              <SlideFade
-                key={e.id}
-                //好耶,有用!
-                in={props.history.findIndex((h) => h.id === e.id) !== -1}
-                style={{ width: "100%" }}
-              >
-                <ExchangeEntry
-                  item={e}
-                  delete={() => {
-                    exchangeStore.deleteItem(props.mid, e.id);
-                  }}
-                  regenImg={() => handleRegenImg(e.id)}
-                />
-              </SlideFade>
-            );
-          })}
-          {props.isChatting && (
-            <SlideFade in={props.isChatting} style={{ width: "100%" }}>
-              <Flex align={"start"} gap={1} w={"100%"}>
-                <Box w={5} />
-                <InputGroup flexGrow={1} w={300} margin={"auto"}>
-                  <Input
-                    value={inputMsg}
-                    pr={9}
-                    size={"sm"}
-                    onChange={(e) => setMsg(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSend();
-                      }
-                    }}
-                  />
-                  <InputRightElement>
-                    <IconButton
-                      aria-label="sendMsg"
-                      size={"xs"}
-                      mt={-1.5}
-                      bgColor={"transparent"}
-                      isDisabled={isWaiting || inputMsg === ""}
-                      onClick={handleSend}
-                      icon={
-                        <Image src={send} objectFit={"contain"} w={"1.5em"} />
-                      }
-                    />
-                  </InputRightElement>
-                </InputGroup>
-                <Image src={deleteIcon} opacity={0} />
-              </Flex>
-            </SlideFade>
-          )}
-        </VStack>
       )}
-    </VStack>
+      <VStack flexGrow={4}>
+        {/* tag */}
+        <Flex w={"90%"} align={"center"}>
+          {props.normType && (
+            <Box
+              w={3}
+              h={3}
+              mr={-3}
+              rounded={"full"}
+              position={"relative"}
+              right={1.5}
+              bgColor={normColorMap.get(props.normType)}
+            />
+          )}
+          <Tag
+            w={"100%"}
+            py={2.5}
+            borderWidth={1}
+            boxShadow={"base"}
+            variant="outline"
+            bgColor={
+              props.isActive
+                ? "orange.200"
+                : props.isSelected
+                ? "orange.100"
+                : "transparent"
+            }
+            justifyContent={"center"}
+            cursor={"pointer"}
+            onClick={props.select}
+          >
+            <TagLabel>
+              <Flex align={"center"}>
+                <Heading as="h5" size="sm" textAlign={"center"} color={"black"}>
+                  {props.text[0] + " / " + props.text[1]}
+                </Heading>
+              </Flex>
+            </TagLabel>
+          </Tag>
+          <Image
+            src={emotionIcon.get(props.emotion)}
+            w={4}
+            ml={-4}
+            position={"relative"}
+            left={2}
+            objectFit={"contain"}
+          />
+        </Flex>
+        {/* 防止产生额外的spacing */}
+        {(props.history.length > 0 || props.isChatting) && (
+          <VStack w={"100%"}>
+            {props.history.map((e) => {
+              return (
+                <SlideFade
+                  key={e.id}
+                  //好耶,有用!
+                  in={props.history.findIndex((h) => h.id === e.id) !== -1}
+                  style={{ width: "100%" }}
+                >
+                  <ExchangeEntry
+                    item={e}
+                    delete={() => {
+                      exchangeStore.deleteItem(props.mid, e.id);
+                    }}
+                    regenImg={() => handleRegenImg(e.id)}
+                  />
+                </SlideFade>
+              );
+            })}
+            {props.isChatting && (
+              <SlideFade in={props.isChatting} style={{ width: "100%" }}>
+                <Flex align={"start"} gap={1} w={"100%"}>
+                  <Box w={5} />
+                  <InputGroup flexGrow={1} w={300} margin={"auto"}>
+                    <Input
+                      value={inputMsg}
+                      pr={9}
+                      size={"sm"}
+                      onChange={(e) => setMsg(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSend();
+                        }
+                      }}
+                    />
+                    <InputRightElement>
+                      <IconButton
+                        aria-label="sendMsg"
+                        size={"xs"}
+                        mt={-1.5}
+                        bgColor={"transparent"}
+                        isDisabled={isWaiting || inputMsg === ""}
+                        onClick={handleSend}
+                        icon={
+                          <Image src={send} objectFit={"contain"} w={"1.5em"} />
+                        }
+                      />
+                    </InputRightElement>
+                  </InputGroup>
+                  <Image src={deleteIcon} opacity={0} />
+                </Flex>
+              </SlideFade>
+            )}
+          </VStack>
+        )}
+      </VStack>
+    </Flex>
   );
 }

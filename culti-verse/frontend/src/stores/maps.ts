@@ -1,12 +1,19 @@
 /**
  * 用于变量值映射的maps
  */
-import defineIcon from "../assets/definition.svg";
+import defineIcon from "../assets/custom.svg";
 import similarIcon from "../assets/similar.svg";
 import gen_imgIcon from "../assets/image_generation.svg";
 import chatIcon from "../assets/chat.svg";
 import transformIcon from "../assets/transfer.svg";
-import { normType, optKey } from "../vite-env";
+import animalIcon from "../assets/animal.png";
+import plantIcon from "../assets/plant.png";
+import fruitIcon from "../assets/fruit.png";
+import otherIcon from "../assets/other.png";
+import negativeIcon from "../assets/negative.svg";
+import neutralIcon from "../assets/neutral.svg";
+import positiveIcon from "../assets/positive.svg";
+import { emotionType, normType, optKey, seriesType } from "../vite-env";
 
 //喻体类型与颜色
 export const normColorMap = new Map<normType, string>([
@@ -25,6 +32,21 @@ export const optIconMap = new Map<optKey, string>([
   ["gen_img", gen_imgIcon],
   ["chat", chatIcon],
   ["trans", transformIcon],
+]);
+
+//词云图类别与对应的图标
+export const seriesIcon = new Map<seriesType, string>([
+  ["Animal", animalIcon],
+  ["Plant", plantIcon],
+  ["Fruit", fruitIcon],
+  ["Other", otherIcon],
+]);
+
+//emotion与对应图标
+export const emotionIcon = new Map<emotionType, string>([
+  ["Negative", negativeIcon],
+  ["Neutral", neutralIcon],
+  ["Positive", positiveIcon],
 ]);
 
 //样式配置

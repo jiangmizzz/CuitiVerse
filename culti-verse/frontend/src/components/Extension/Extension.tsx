@@ -179,7 +179,7 @@ export default function Extension() {
       direction={"column"}
       w={"min-content"}
     >
-      <VStack flex={1} overflow={"auto"} spacing={3} pb={2}>
+      <VStack flex={1} overflow={"auto"} spacing={3} pb={2} maxW={300}>
         {msgList.msgs.map((msg) => {
           return (
             <Message
@@ -193,7 +193,7 @@ export default function Extension() {
           );
         })}
       </VStack>
-      <Box w={280}>
+      <Box>
         <HStack mb={1}>
           {(["Appropriate", "Emotion", "Inference"] as checkType[]).map(
             (option) => {

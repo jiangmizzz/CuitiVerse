@@ -1,7 +1,6 @@
 /**
  * 用于编辑用户文化背景
  */
-import "./Setting.css";
 import {
   Box,
   Button,
@@ -9,6 +8,7 @@ import {
   FormControl,
   FormHelperText,
   FormLabel,
+  HStack,
   Input,
   NumberDecrementStepper,
   NumberIncrementStepper,
@@ -17,6 +17,8 @@ import {
   NumberInputStepper,
   PopoverFooter,
   Stack,
+  Text,
+  Textarea,
 } from "@chakra-ui/react";
 import {
   Popover,
@@ -190,6 +192,25 @@ export default function Setting() {
                 <FormHelperText>
                   Larger value indicates better understanding
                 </FormHelperText>
+              </FormControl>
+              <FormControl>
+                <FormLabel>
+                  <HStack>
+                    <Text>{"Remark"}</Text>
+                    <Text fontSize={"xs"} color={"gray.400"}>
+                      {"(optional)"}
+                    </Text>
+                  </HStack>
+                </FormLabel>
+                <Textarea
+                  size={"sm"}
+                  placeholder="Your special cultural background"
+                  mb={3}
+                  value={formValue.remark}
+                  onChange={(e) =>
+                    setFormValue({ ...formValue, remark: e.target.value })
+                  }
+                />
               </FormControl>
             </Stack>
           </PopoverBody>

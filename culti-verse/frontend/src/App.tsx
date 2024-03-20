@@ -15,14 +15,28 @@ const boxCfg = {
   overflow: "hidden",
 };
 
-function BoxHeader(props: { title: string; isMain?: boolean }) {
+function BoxHeader(props: { title: string; position: "l" | "m" | "r" }) {
   return (
     <Center
-      h={"2em"}
-      bg={props.isMain ? "" : "gray.200"}
-      bgGradient={props.isMain ? "linear(to-l, #4E7063, #E3E3E3, #9B8267)" : ""}
+      //*需要将h改为minH，否则header部分高度会被下方内容压窄
+      minH={"2em"}
+      bg={
+        props.position === "l"
+          ? "#9B8267"
+          : props.position === "r"
+          ? "#4E7063"
+          : ""
+      }
+      bgGradient={
+        props.position === "m" ? "linear(to-l, #4E7063, #E3E3E3, #9B8267)" : ""
+      }
     >
-      <Heading as="h4" size="md" whiteSpace={"nowrap"}>
+      <Heading
+        as="h4"
+        size="md"
+        whiteSpace={"nowrap"}
+        color={props.position === "m" ? "black" : "white"}
+      >
         {props.title}
       </Heading>
     </Center>
@@ -47,7 +61,7 @@ function App() {
         </div>
         <Flex m={"0.5em"} flexGrow={1} gap={2} minH={0}>
           <Flex direction={"column"} {...boxCfg}>
-            <BoxHeader title="Culture Extraction View" />
+            <BoxHeader title="Culture Source Analyze" position="l" />
             <Extraction />
           </Flex>
           <Flex
@@ -57,11 +71,11 @@ function App() {
             direction={"column"}
             {...boxCfg}
           >
-            <BoxHeader title="Culture Exchange View" isMain />
+            <BoxHeader title="Culture Adapt" position="m" />
             <Exchange />
           </Flex>
           <Flex direction={"column"} {...boxCfg}>
-            <BoxHeader title="Culture Extension View" />
+            <BoxHeader title="Culture Assimilate" position="r" />
             <Extension />
           </Flex>
         </Flex>

@@ -10,10 +10,18 @@ import {
   Tooltip,
   VStack,
   useToast,
+  Image,
+  Heading,
+  Divider,
 } from "@chakra-ui/react";
-import { MetaphorType, normType, optKey } from "../../vite-env";
-import { normColorMap, optIconMap } from "../../stores/maps";
-import { QuestionOutlineIcon } from "@chakra-ui/icons";
+import {
+  MetaphorType,
+  conditionType,
+  emotionType,
+  normType,
+  optKey,
+} from "../../vite-env";
+import { emotionIcon, normColorMap, optIconMap } from "../../stores/maps";
 import { useEffect, useState } from "react";
 import Metaphor from "./Metaphor";
 import { useExploreStore } from "../../stores/explore";
@@ -23,9 +31,10 @@ import { getFetcher } from "../../utils/request";
 import { useSettingStore } from "../../stores/setting";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import useSWR from "swr";
+import Choice from "./Choice";
+import { useConditionsStore } from "../../stores/conditions";
 
 const vstackCfg = {
-  flex: 1,
   h: "100%",
   overflow: "auto",
   spacing: 5,
@@ -39,16 +48,23 @@ const normTypes: normType[] = [
   "Homograph",
   "Satire",
 ];
+const emotionTypes: emotionType[] = ["Positive", "Neutral", "Negative"];
 const opts: {
   key: optKey;
   op: string;
   icon: string;
 }[] = [
-  { key: "def", op: "Get Definition", icon: optIconMap.get("def")! },
-  { key: "similar", op: "Similar Images", icon: optIconMap.get("similar")! },
   { key: "gen_img", op: "Generate AI Image", icon: optIconMap.get("gen_img")! },
   { key: "chat", op: "Chat", icon: optIconMap.get("chat")! },
   { key: "trans", op: "Cultural Transform", icon: optIconMap.get("trans")! },
+];
+
+const conditions: conditionType[] = [
+  "element",
+  "rhetoric",
+  "symbol",
+  "custom",
+  "emotion",
 ];
 
 // norm type sample
@@ -70,28 +86,27 @@ export default function Exchange() {
   const exploreStore = useExploreStore();
   const exchangeStore = useExchangeStore();
   const settingStore = useSettingStore();
+  const conditionsStore = useConditionsStore();
   const toast = useToast();
   // 选中的喻体
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [selectedM, setSelectedM] = useState<{
     mid: string;
-    text: string;
+    text: string[];
     isForeign: boolean;
-  }>({ mid: "", text: "", isForeign: false });
+  }>({ mid: "", text: [], isForeign: false });
   const [currentOpt, setCurrentOpt] = useState<optKey | null>(null);
   const [foreignM, setForeignM] = useState<MetaphorType[]>([]);
   const [isTransforming, setTransforming] = useState<boolean>(false);
 
   //更新选中物像时清空selectedM
   useEffect(() => {
-    setSelectedM({ mid: "", text: "", isForeign: false });
+    setSelectedM({ mid: "", text: [], isForeign: false });
   }, [exploreStore.noumenon.nid]);
-  //更新本土喻体时清空原转译内容，暂时注释掉
-  // useEffect(() => {
-  //   if (!selectedM.isForeign) {
-  //     setForeignM([]);
-  //   }
-  // }, [selectedM]);
+  //更新本土喻体时清空原转译内容
+  useEffect(() => {
+    setForeignM([]);
+  }, [exploreStore.metaphor.text]);
 
   // 获取喻体数据
   const { data: metaphorsData, isLoading: metaphorsLoading } = useSWR<
@@ -135,7 +150,9 @@ export default function Exchange() {
           : "China";
         const imgUrl = await generateImg(
           settingStore.generateDesc() +
-            `Please generate a schematic diagram of the image of the ${selectedM.text} in the context of ${targetCulture} culture, which can make it easy for me to understand it.`
+            `Please generate a schematic diagram of the image of the ${
+              selectedM.text[0] + "(" + selectedM.text[1] + ")"
+            } in the context of ${targetCulture} culture, which can make it easy for me to understand it.`
         );
         exchangeStore.deleteItem(mid, loadingId);
         exchangeStore.addItem(mid, {
@@ -166,7 +183,11 @@ export default function Exchange() {
             answer.split(",").map((text) => {
               return {
                 mid: selectedM.mid + text,
-                text: text,
+                text: [text],
+                //TODO:这里的格式要再调整
+                emotion: "Neutral",
+                normType: "Homograph",
+                meaning: ["", ""],
               } satisfies MetaphorType;
             })
           );
@@ -179,22 +200,47 @@ export default function Exchange() {
   return (
     <Flex
       className="exchange-main app-item-main"
-      px={"1em"}
+      px={"0.7em"}
       direction={"column"}
-      // style={{ width: "750px" }}
     >
+      {/* view title */}
+      <Flex w={"100%"} mb={1}>
+        <Heading as="h5" size="sm" flexGrow={4} textAlign={"center"}>
+          {"Culture Source Explore"}
+        </Heading>
+        <Heading as="h5" size="sm" flexGrow={5} textAlign={"center"}>
+          {"Culture Transfer"}
+        </Heading>
+      </Flex>
+      {/* samples */}
       <HStack justify={"space-between"}>
-        <HStack spacing={1.5}>
-          {normTypes.map((type) => {
-            return <TypeEntry key={type} type={type} />;
-          })}
-          <Tooltip
-            label="Colors represent different type of norms"
-            placement="top"
-          >
-            <QuestionOutlineIcon color={"gray.300"} />
-          </Tooltip>
-        </HStack>
+        <VStack align={"start"} spacing={0}>
+          <HStack spacing={1.5}>
+            <Text as={"b"} fontSize={"sm"}>
+              {"Rhetoric Type: "}
+            </Text>
+            {normTypes.map((type) => {
+              return <TypeEntry key={type} type={type} />;
+            })}
+          </HStack>
+          <HStack align={"center"}>
+            <Text as={"b"} fontSize={"sm"}>
+              {"Custom: "}
+            </Text>
+            <Image src={optIconMap.get("def")} />
+            <Text as={"b"} fontSize={"sm"} ml={2}>
+              {"Emotion Type: "}
+            </Text>
+            {emotionTypes.map((e) => {
+              return (
+                <Flex align={"center"} gap={0.4} key={e}>
+                  <Image src={emotionIcon.get(e)} />
+                  <Text fontSize="sm">{e}</Text>
+                </Flex>
+              );
+            })}
+          </HStack>
+        </VStack>
         <HStack spacing={0.5} divider={<StackDivider borderColor="gray.200" />}>
           {opts.map((opt) => {
             return (
@@ -223,13 +269,59 @@ export default function Exchange() {
           })}
         </HStack>
       </HStack>
+      {/* transform choices */}
+      <HStack mt={2} divider={<StackDivider borderColor="gray.200" />}>
+        <HStack flexGrow={4} justify={"space-between"}>
+          {conditions.slice(1).map((c) => {
+            return (
+              <Choice
+                key={c}
+                text={c}
+                isRequired={false}
+                isChecked={conditionsStore.keeping[c] !== false}
+                onToggle={() => {
+                  const newCondition = { ...conditionsStore.keeping };
+                  newCondition[c] = !conditionsStore.keeping[c];
+                  conditionsStore.setCondition({
+                    keeping: {
+                      ...newCondition,
+                    },
+                  });
+                }}
+              />
+            );
+          })}
+        </HStack>
+        <HStack flexGrow={5} justify={"space-between"}>
+          {conditions.map((c) => {
+            return (
+              <Choice
+                key={c}
+                text={c}
+                isRequired={true}
+                isChecked={conditionsStore.requirement[c] !== false}
+                onToggle={() => {
+                  const newCondition = { ...conditionsStore.requirement };
+                  newCondition[c] = !conditionsStore.requirement[c];
+                  conditionsStore.setCondition({
+                    requirement: {
+                      ...newCondition,
+                    },
+                  });
+                }}
+              />
+            );
+          })}
+        </HStack>
+      </HStack>
+      <Divider opacity={1} variant={"dashed"} mt={0.5} />
       <HStack
         mt={2}
         flexGrow={1}
         overflow={"auto"}
         divider={<StackDivider borderColor="gray.200" />}
       >
-        <VStack {...vstackCfg}>
+        <VStack {...vstackCfg} flex={4}>
           {exploreStore.noumenon.nid !== "" ? (
             metaphorsLoading ? (
               <Center h={"100%"}>
@@ -247,6 +339,9 @@ export default function Exchange() {
                     key={m.mid}
                     mid={m.mid}
                     text={m.text}
+                    normType={m.normType}
+                    emotion={m.emotion}
+                    meaning={m.meaning}
                     history={exchangeStore.exchangesMap.get(m.mid) ?? []}
                     isForeign={false}
                     isSelected={exploreStore.metaphor.mid === m.mid}
@@ -260,6 +355,8 @@ export default function Exchange() {
                         mid: m.mid,
                         text: m.text,
                         normType: m.normType,
+                        emotion: m.emotion,
+                        meaning: m.meaning,
                       });
                       //activate
                       setSelectedM({
@@ -268,7 +365,6 @@ export default function Exchange() {
                         isForeign: false,
                       });
                     }}
-                    normType={m.normType}
                   />
                 );
               })
@@ -279,7 +375,7 @@ export default function Exchange() {
             </Flex>
           )}
         </VStack>
-        <VStack {...vstackCfg}>
+        <VStack {...vstackCfg} flex={5}>
           {foreignM.length !== 0 ? (
             foreignM.map((fm) => {
               return (
@@ -287,6 +383,9 @@ export default function Exchange() {
                   key={exploreStore.metaphor.mid + fm.mid}
                   mid={fm.mid}
                   text={fm.text}
+                  normType={fm.normType}
+                  emotion={fm.emotion}
+                  meaning={fm.meaning}
                   history={exchangeStore.exchangesMap.get(fm.mid) ?? []}
                   isForeign={true}
                   isSelected={exploreStore.foreignMetaphor.text === fm.text}
