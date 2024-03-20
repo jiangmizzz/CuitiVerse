@@ -16,13 +16,15 @@ type Noumenons struct {
 }
 
 type Combinations struct {
-	Noumenon Noumenon `json:"noumenon"`
-	Elements []string `json:"elements"` // 组合中包含的物像nid列表
+	NID       string          `json:"nid"`
+	Name      [2]string       `json:"name"`
+	Metaphors []MetaphorCount `json:"metaphors"`
+	Elements  []string        `json:"elements"` // 组合中包含的物像nid列表
 }
 
 type Noumenon struct {
 	NID       string          `json:"nid"`
-	Name      string          `json:"name"`
+	Name      [2]string       `json:"name"`
 	Metaphors []MetaphorCount `json:"metaphors"`
 }
 
@@ -69,6 +71,7 @@ type Node struct {
 	ID    string `json:"id"`
 	Value int    `json:"value"`
 	Label string `json:"label"`
+	Type  string `json:"type"`
 }
 
 type Edge struct {
