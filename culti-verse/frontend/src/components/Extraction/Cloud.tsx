@@ -9,11 +9,11 @@ import { seriesColorMap } from "../../stores/maps";
 
 const seriesCfg = {
   type: "wordCloud",
-  shape: "cardioid", //形状
+  shape: "circle", //形状
   keepAspect: false, //图像比例
 
   // Text size range
-  sizeRange: [8, 16],
+  sizeRange: [7, 16],
 
   //文字旋转角, range [-90, 90] by rotationStep 45
   rotationRange: [0, 0],
@@ -68,11 +68,11 @@ export default function Cloud(props: {
         {
           ...seriesCfg,
           //图像在画布中的位置
-          left: "20",
+          left: "0",
           top: "0",
-          width: "50%",
+          width: "80%",
           height: "60%",
-          maskImage: maskImage, //遮罩图层
+          // maskImage: maskImage, //遮罩图层
           // Data is an array. Each array item must have name and value property.
           textStyle: {
             color: function () {
@@ -83,11 +83,11 @@ export default function Cloud(props: {
         },
         {
           ...seriesCfg,
-          left: "20",
-          top: "130",
-          width: "60%",
-          height: "30%",
-          maskImage: maskImage,
+          left: "70",
+          top: "100",
+          width: "80%",
+          height: "50%",
+          // maskImage: maskImage,
           // Data is an array. Each array item must have name and value property.
           textStyle: {
             color: function () {
@@ -98,10 +98,10 @@ export default function Cloud(props: {
         },
         {
           ...seriesCfg,
-          left: "120",
-          top: "100",
-          width: "50%",
-          height: "30%",
+          left: "0",
+          top: "90",
+          width: "40%",
+          height: "50%",
           maskImage: maskImage,
           textStyle: {
             color: function () {

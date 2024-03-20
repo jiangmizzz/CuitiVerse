@@ -122,8 +122,12 @@ export default function Extraction() {
 
   //更换画作时清空
   useEffect(() => {
-    setNoumenons([]);
-    setCombinations([]);
+    setMutating(true);
+    setTimeout(() => {
+      setMutating(false);
+    }, 300);
+    // setNoumenons([]);
+    // setCombinations([]);
   }, [pid]);
 
   //数据更新时获取新的物像列表和物像组合列表
@@ -159,7 +163,7 @@ export default function Extraction() {
           positionsArray.push(pos);
         });
         positionsArray.push(position);
-        console.log(positionsArray);
+        //console.log(positionsArray);
       }
     });
     //1. 该物像已经存在, position+1
