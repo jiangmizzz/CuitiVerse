@@ -72,8 +72,7 @@ export default function Noumenon(props: NoumenonProps) {
         });
       };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [props.occurences, props.paintingSrc, props.type]);
 
   return (
     <VStack w={"100%"} spacing={0.5} align={"end"}>

@@ -7,7 +7,7 @@ import { ExploreTrack, MetaphorType } from "../vite-env";
 interface ExploreState extends ExploreTrack {
   setNoumenon: (newId: string, newValue: string[]) => void;
   setMetaphor: (newValue: MetaphorType) => void;
-  setForeign: (newValue: string[]) => void;
+  setForeign: (newValue: MetaphorType) => void;
   isCompleted: () => boolean;
   //生成格式化的验证prompt
   generateTrack: () => string;
@@ -26,13 +26,18 @@ export const useExploreStore = create<ExploreState>()((set, get) => ({
     meaning: [],
   },
   foreignMetaphor: {
+    mid: "",
     text: [],
+    normType: "Iconic",
+    emotion: "Neutral",
+    meaning: [],
+    element: [],
   },
   //作为前置条件的量修改都会导致后面路径上的量被重置
   setNoumenon: (newId, newValue) => {
     set(() => {
       return {
-        noumenon: { nid: newId, text: newValue },
+        noumenon: { nid: newId, text: [...newValue] },
         metaphor: {
           mid: "",
           text: [],
@@ -40,7 +45,14 @@ export const useExploreStore = create<ExploreState>()((set, get) => ({
           emotion: "Neutral",
           meaning: [],
         },
-        foreignMetaphor: { text: [] },
+        foreignMetaphor: {
+          mid: "",
+          text: [],
+          normType: "Iconic",
+          emotion: "Neutral",
+          meaning: [],
+          element: [],
+        },
       };
     });
   },
@@ -54,13 +66,29 @@ export const useExploreStore = create<ExploreState>()((set, get) => ({
           emotion: newValue.emotion,
           meaning: [...newValue.meaning],
         },
-        foreignMetaphor: { text: [] },
+        foreignMetaphor: {
+          mid: "",
+          text: [],
+          normType: "Iconic",
+          emotion: "Neutral",
+          meaning: [],
+          element: [],
+        },
       };
     });
   },
   setForeign: (newValue) => {
     set(() => {
-      return { foreignMetaphor: { text: [...newValue] } };
+      return {
+        foreignMetaphor: {
+          mid: newValue.mid,
+          text: [...newValue.text],
+          normType: newValue.normType,
+          emotion: newValue.emotion,
+          meaning: [...newValue.meaning],
+          element: [...newValue.element!],
+        },
+      };
     });
   },
   isCompleted: () => {
@@ -74,6 +102,18 @@ export const useExploreStore = create<ExploreState>()((set, get) => ({
   },
   generateTrack: () => {
     const track = get() as ExploreTrack;
-    return `The current translation path is: element: ${track.noumenon.text} --> symbol: ${track.metaphor.text}(way of rhetoric: ${track.metaphor.normType}) --> foreign symbol: ${track.foreignMetaphor.text}`;
+    return `The current translation path is: 
+    1. Chinese Norm 
+    element:  ${track.noumenon.text[1]}; 
+    symbol: ${track.metaphor.text[1]} (rhetoric: ${track.metaphor.normType}); 
+    custom: ${track.metaphor.meaning[1]}; 
+    emotion: ${track.metaphor.emotion}; 
+    2. Foreign Norm 
+    element: ${track.foreignMetaphor.element![1]}; 
+    symbol: ${track.foreignMetaphor.text[1]} (rhetoric: ${
+      track.foreignMetaphor.normType
+    }); 
+    custom: ${track.foreignMetaphor.meaning[1]}; 
+    emotion: ${track.foreignMetaphor.emotion}; \n`;
   },
 }));

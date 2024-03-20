@@ -43,16 +43,14 @@ export interface ExploreTrack {
   noumenon: { nid: string; text: string[] }; //物像
   //喻体
   metaphor: MetaphorType;
-  foreignMetaphor: {
-    //喻体转译
-    text: string[];
-  };
+  foreignMetaphor: MetaphorType;
 }
 
 export interface Node {
   id: string; //nid
   value: number; //物像数量
   label: string; //标签，即物像名
+  type: seriesType; //物像所属类别
 }
 
 export interface Edge {
@@ -96,11 +94,11 @@ export interface MetaphorType {
 
 export type ExchangeItem = (
   | {
-      opt: "def" | "gen_img";
+      opt: "def";
       content: string;
     }
   | {
-      opt: "chat" | "similar";
+      opt: "chat" | "similar" | "gen_img";
       content: string[]; // chat形式时content为string[2], similar形式时为src列表
     }
 ) & { id: number; isLoading: boolean };
@@ -131,4 +129,13 @@ export interface CloudData {
     name: string;
     nid: string;
   }[];
+}
+
+//详见Exchange.tsx中的prompt
+export interface Norm {
+  element: string[];
+  symbol: string[];
+  emotion: emotionType;
+  rhetoric: normType;
+  custom: string[];
 }

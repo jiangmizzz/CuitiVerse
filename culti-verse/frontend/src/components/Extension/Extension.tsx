@@ -18,7 +18,7 @@ import Message from "./Message";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { useExploreStore } from "../../stores/explore";
 import { useSettingStore } from "../../stores/setting";
-import { chat } from "../../utils/ai-requset";
+import { chat, translate } from "../../utils/ai-requset";
 
 export default function Extension() {
   const exploreStore = useExploreStore();
@@ -115,31 +115,12 @@ export default function Extension() {
     }
   }
 
-  // 文字翻译
-  async function translate(text: string): Promise<string> {
-    setProducing(true);
-    const context = [
-      {
-        role: "system",
-        content:
-          "Now you are a translator, required to translate content as accurately as possible.",
-      },
-      {
-        role: "user",
-        content: `Please translate the following text into the language of ${settingStore.culture}, and keep the format unchanged: ${text}`,
-      },
-    ] as ChatCompletionMessageParam[];
-    const answer = await chat(context);
-    setProducing(false);
-    return answer;
-  }
-
   //范式验证,将生成的文字填充/替换到输入框
   async function checkNorm(opt: checkType) {
     if (exploreStore.isCompleted()) {
       let head =
         "The translation path of traditional Chinese painting is: element (in a painting) --> symbol (in a certain way of rhetoric) --> foreign cultural symbol. ";
-      let tail: string = "\nQ: ";
+      let tail: string = "**Question**: \n";
       if (opt === "Appropriate") {
         head += `Now I need your help to determine whether the current translation path is appropriate for me.`;
         tail += `Please help me determine whether the current translation path is appropriate for me.`;
@@ -150,15 +131,18 @@ export default function Extension() {
         head += `Now I need you to help me think of more similar translation paths in Chinese paintings`;
         tail += `Please help me think of more similar translation paths in Chinese paintings (make it suitable for my understanding).`;
       }
+      setProducing(true);
       const input = await translate(
+        settingStore.culture,
         head +
-          `\nThe following are descriptions of current conditions` +
-          `\nBackground: ` +
-          settingStore.generateDesc() +
-          `\nTask: ` +
-          exploreStore.generateTrack() +
-          tail
+          `The following are descriptions of current conditions.
+          \n**Background**: 
+          ${settingStore.generateDesc()}
+          \n**Task**: 
+          ${exploreStore.generateTrack()}
+          ${tail}`
       );
+      setProducing(false);
       setMsg(input);
     } else {
       toast({
@@ -177,7 +161,7 @@ export default function Extension() {
     <Flex
       className="extension-main app-item-main"
       direction={"column"}
-      w={"min-content"}
+      minW={0}
     >
       <VStack flex={1} overflow={"auto"} spacing={3} pb={2} maxW={300}>
         {msgList.msgs.map((msg) => {
@@ -193,7 +177,7 @@ export default function Extension() {
           );
         })}
       </VStack>
-      <Box>
+      <Box minW={260} overflowX={"auto"}>
         <HStack mb={1}>
           {(["Appropriate", "Emotion", "Inference"] as checkType[]).map(
             (option) => {

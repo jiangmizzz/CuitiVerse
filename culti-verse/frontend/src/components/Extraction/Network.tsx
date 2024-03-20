@@ -2,6 +2,7 @@ import { Box } from "@chakra-ui/react";
 import { useEffect, useRef } from "react";
 import { Network } from "vis-network";
 import { Node, Edge } from "../../vite-env";
+import { seriesColorMap } from "../../stores/maps";
 
 export default function NetWork(props: {
   nodes: Node[];
@@ -20,21 +21,39 @@ export default function NetWork(props: {
           },
         },
       },
+      edges: {
+        color: {
+          color: "#CBD5E0",
+        },
+      },
     };
     //@ts-expect-error network's type can be transformed when render
     const network: Network =
       networkRef.current &&
       new Network(
         networkRef.current,
-        { nodes: props.nodes, edges: props.edges },
+        {
+          nodes: props.nodes.map((node) => {
+            return {
+              ...node,
+              color: {
+                border: seriesColorMap.get(node.type),
+                background: seriesColorMap.get(node.type + "b"),
+                highlight: {
+                  border: seriesColorMap.get(node.type),
+                  background: seriesColorMap.get(node.type + "cb"),
+                },
+              },
+            };
+          }),
+          edges: props.edges,
+        },
         options
       );
     if (networkRef && network) {
       network!.on("click", function (params) {
         const node: string | undefined = params.nodes[0];
         const edge: string | undefined = params.edges[0];
-        // console.log(node, edge);
-        // console.log(params.nodes[0], params.edges[0]);
         if (node || edge) {
           if (node) {
             props.select(node);

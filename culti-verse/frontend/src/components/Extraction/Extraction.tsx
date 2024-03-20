@@ -17,13 +17,14 @@ import {
   Badge,
   Divider,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Cloud from "./Cloud";
 import NetWork from "./Network";
 import {
   CloudData,
   Edge,
   Node,
+  NoumenonType,
   PaintingType,
   seriesType,
 } from "../../vite-env";
@@ -36,6 +37,7 @@ import { getFetcher, origin } from "../../utils/request";
 import { normColorMap, seriesIcon } from "../../stores/maps";
 import Choice from "../Exchange/Choice";
 import { useConditionsStore } from "../../stores/conditions";
+import { translate } from "../../utils/ai-requset";
 
 //值得记录的写法+1
 type SimplePic = Pick<
@@ -73,6 +75,25 @@ export default function Extraction() {
   const [isList, setIsList] = useState<boolean>(true); //画作列表态
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [pid, setPid] = useState<string>(""); //选中的一幅画作id
+  //单个物像列表
+  const [noumenons, setNoumenons] = useState<
+    (NoumenonType & {
+      positions: number[][];
+    })[]
+  >([]);
+  //组合物像列表
+  const [combinations, setCombinations] = useState<
+    (NoumenonType & {
+      elements: string[];
+    })[]
+  >([]);
+  const [canvasMutating, setMutating] = useState<boolean>(false);
+
+  //画作更新时同步刷新选择的物像
+  useEffect(() => {
+    exploreStore.setNoumenon("", []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pid]);
 
   //获取词云图数据
   const { data: cloudData, isLoading: cloudLoading } = useSWR<CloudData[]>(
@@ -95,8 +116,95 @@ export default function Extraction() {
   //获取一幅画作
   const { data: picData, isLoading: picLoading } = useSWR<PaintingType>(
     pid !== "" ? `/pic/get/${pid}` : null,
-    getFetcher<PaintingType>
+    getFetcher<PaintingType>,
+    { revalidateOnFocus: false }
   );
+
+  //更换画作时清空
+  useEffect(() => {
+    setNoumenons([]);
+    setCombinations([]);
+  }, [pid]);
+
+  //数据更新时获取新的物像列表和物像组合列表
+  useEffect(() => {
+    if (picData !== undefined) {
+      setMutating(true);
+      setNoumenons(picData.noumenons);
+      setCombinations(picData.combinations);
+      setMutating(false);
+    }
+  }, [picData]);
+
+  interface AddElementRes {
+    newNoumenon: NoumenonType;
+    combinations: (NoumenonType & {
+      //组合物象
+      elements: string[]; //组合中包含的nid
+    })[];
+  }
+  //新添加一个物像
+  async function addElement(text: string, position: number[]): Promise<void> {
+    const usText = await translate("United States", text); //转译成英文
+    const nList: string = noumenons.map((n) => n.nid).toString() + "," + usText;
+    const res = await getFetcher<AddElementRes>("/pic/add/" + nList);
+
+    //添加物像的几种可能
+    let existed = false;
+    const positionsArray: number[][] = []; //新位置数组
+    noumenons.forEach((n) => {
+      if (n.nid === res.newNoumenon.nid || n.name[1] === usText) {
+        existed = true;
+        n.positions.forEach((pos) => {
+          positionsArray.push(pos);
+        });
+        positionsArray.push(position);
+        console.log(positionsArray);
+      }
+    });
+    //1. 该物像已经存在, position+1
+    if (existed) {
+      setNoumenons(
+        noumenons.map((n) => {
+          if (n.nid === res.newNoumenon.nid || n.name[1] === usText) {
+            return { ...n, positions: [...positionsArray] };
+          } else {
+            return { ...n };
+          }
+        })
+      );
+    } else if (res.newNoumenon.nid === "") {
+      //2. 物像不在库中
+      const zhText = await translate("China", usText);
+      setNoumenons([
+        ...noumenons,
+        {
+          nid: usText,
+          name: [zhText, usText],
+          metaphors: [],
+          positions: [[...position]],
+        },
+      ]);
+    } else {
+      //3. 匹配到了新物像
+      setNoumenons([
+        ...noumenons,
+        {
+          ...res.newNoumenon,
+          positions: [[...position]],
+        },
+      ]);
+      //如有组合则更新
+      if (res.combinations.length > 0) {
+        setCombinations([...res.combinations]);
+      }
+    }
+    setMutating(true);
+    //令canvas延时出现，避免绘制尺寸异常
+    setTimeout(() => {
+      setMutating(false);
+    }, 300);
+  }
 
   return (
     <HStack
@@ -194,7 +302,6 @@ export default function Extraction() {
                             onClick={() => {
                               setPid(pic.pid);
                               setIsList(false);
-                              exploreStore.setNoumenon("", []);
                             }}
                           />
                         </Tooltip>
@@ -215,7 +322,8 @@ export default function Extraction() {
                   : "No matching paintings found"}
               </Flex>
             )
-          ) : picLoading ? (
+          ) : //此处最后一个条件用来确保canvas首次渲染时字体不会异常放大
+          picLoading || canvasMutating || noumenons.length === 0 ? (
             <Center h={"100%"}>
               <Spinner
                 speed="0.8s"
@@ -226,8 +334,11 @@ export default function Extraction() {
             </Center>
           ) : (
             <Painting
-              {...(picData ? { ...picData } : { ...picData1 })}
+              {...(picData
+                ? { ...picData, noumenons: noumenons }
+                : { ...picData1 })}
               returnList={() => setIsList(true)}
+              addElement={(text, position) => addElement(text, position)}
             />
           )}
         </Box>
@@ -285,7 +396,7 @@ export default function Extraction() {
           align={"center"}
         >
           <VStack spacing={5} w={"95%"} h={"100%"}>
-            {!isList ? (
+            {pid !== "" ? (
               picLoading ? (
                 <Center h={"100%"}>
                   <Spinner
@@ -297,7 +408,7 @@ export default function Extraction() {
                 </Center>
               ) : (
                 [
-                  ...picData!.noumenons.map((n) => {
+                  ...noumenons.map((n) => {
                     return (
                       <Noumenon
                         key={n.nid}
@@ -314,7 +425,7 @@ export default function Extraction() {
                       />
                     );
                   }),
-                  ...picData!.combinations.map((n) => {
+                  ...combinations.map((n) => {
                     return (
                       <Noumenon
                         key={n.nid}

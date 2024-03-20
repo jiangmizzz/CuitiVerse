@@ -16,10 +16,17 @@ import {
   Input,
   InputRightElement,
   IconButton,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  InputLeftElement,
+  Icon,
 } from "@chakra-ui/react";
 import { ExchangeItem, MetaphorType } from "../../vite-env";
 import {
   emotionIcon,
+  faqs,
   normColorMap,
   optIconMap,
   textBoxCfg,
@@ -31,8 +38,10 @@ import { useExchangeStore } from "../../stores/exchange";
 import { useEffect, useState } from "react";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import ImgPreviewer from "../ImgPreviewer/ImgPreviewer";
-import { chat, generateImg } from "../../utils/ai-requset";
+import { chat, generateImg, translate } from "../../utils/ai-requset";
 import { useSettingStore } from "../../stores/setting";
+import { ChevronRightIcon, HamburgerIcon } from "@chakra-ui/icons";
+import { useExploreStore } from "../../stores/explore";
 
 const textCfg = {
   fontSize: "xs",
@@ -56,7 +65,7 @@ interface ExchangeEntryProps {
   regenImg: () => void;
 }
 
-//TODO:单条用户操作历史
+//单条用户操作历史
 function ExchangeEntry(props: ExchangeEntryProps) {
   if (props.item.isLoading === true) {
     //loading态的信息
@@ -75,11 +84,16 @@ function ExchangeEntry(props: ExchangeEntryProps) {
                 <Spinner {...spincfg} my={3} />
               </Center>
             ) : props.item.opt === "gen_img" ? (
-              <AspectRatio ratio={1} bgColor={"gray.100"}>
-                <Center>
-                  <Spinner {...spincfg} size={"xl"} thickness="5px" />
+              <VStack spacing={1}>
+                <AspectRatio w={"100%"} ratio={1} bgColor={"gray.100"}>
+                  <Center>
+                    <Spinner {...spincfg} size={"xl"} thickness="5px" />
+                  </Center>
+                </AspectRatio>
+                <Center {...textBoxCfg} w={"100%"}>
+                  <Spinner {...spincfg} my={3} />
                 </Center>
-              </AspectRatio>
+              </VStack>
             ) : props.item.opt === "chat" ? (
               <VStack spacing={1}>
                 <VStack {...textBoxCfg} w={"100%"}>
@@ -129,19 +143,30 @@ function ExchangeEntry(props: ExchangeEntryProps) {
                 })}
               </VStack>
             ) : props.item.opt === "gen_img" ? (
-              <AspectRatio ratio={1}>
-                <ImgPreviewer
-                  imgSrc={props.item.content}
-                  trigger={
-                    <Image
-                      objectFit={"contain"}
-                      src={props.item.content}
-                      cursor={"pointer"}
-                      title="Click to preview"
-                    />
-                  }
-                />
-              </AspectRatio>
+              <VStack spacing={1}>
+                <AspectRatio w={"100%"} ratio={1}>
+                  <ImgPreviewer
+                    imgSrc={props.item.content[0]}
+                    trigger={
+                      <Image
+                        objectFit={"contain"}
+                        src={props.item.content[0]}
+                        cursor={"pointer"}
+                        title="Click to preview"
+                      />
+                    }
+                  />
+                </AspectRatio>
+                <VStack {...textBoxCfg} w={"100%"}>
+                  {props.item.content[1].split("\n").map((l, index) => {
+                    return (
+                      <Text key={l + index + props.item.id} {...textCfg}>
+                        {l}
+                      </Text>
+                    );
+                  })}
+                </VStack>
+              </VStack>
             ) : props.item.opt === "chat" ? (
               <VStack spacing={1}>
                 <VStack {...textBoxCfg} w={"100%"}>
@@ -206,12 +231,17 @@ interface MetaphorProps extends MetaphorType {
   isChatting: boolean; //chating state，显示对话输入框
   select: () => void;
 }
-//TODO:喻体对象组件
+//喻体对象组件
 export default function Metaphor(props: MetaphorProps) {
   const exchangeStore = useExchangeStore();
   const settingStore = useSettingStore();
+  const exploreStore = useExploreStore();
   const [inputMsg, setMsg] = useState<string>("");
   const [isWaiting, setWaiting] = useState<boolean>(false);
+  const [isProducing, setProducing] = useState<{ id: number; state: boolean }>({
+    id: 0,
+    state: false,
+  });
 
   useEffect(() => {
     //加载定义(第一条)
@@ -235,14 +265,32 @@ export default function Metaphor(props: MetaphorProps) {
     const targetCulture = props.isForeign ? settingStore.culture : "China";
     const imgUrl = await generateImg(
       settingStore.generateDesc() +
-        `Please generate a schematic diagram of the image of the ${
+        `Please generate a schematic diagram of the image of the main symbol: ${
           props.text[0] + "(" + props.text[1] + ")"
+        } ${
+          props.element ? "which relate slightly to " + props.element[1] : ""
         } in the context of ${targetCulture} culture, which can make it easy for me to understand it.`
     );
-    //再次更换
+    const descContext = [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: `Please use ${
+              settingStore.culture
+            }'s language to summarize the content of this picture (tips on perspective of understanding: ${
+              props.text[1]
+            }, ${props.element ? props.element[1] : ""}).`,
+          },
+          { type: "image_url", image_url: { url: imgUrl, detail: "auto" } },
+        ],
+      },
+    ] as ChatCompletionMessageParam[];
+    const desc = await chat(descContext, true);
     exchangeStore.replaceImg(props.mid, id, {
       opt: "gen_img",
-      content: imgUrl,
+      content: [imgUrl, desc],
       isLoading: false,
     });
   }
@@ -287,14 +335,43 @@ export default function Metaphor(props: MetaphorProps) {
     setWaiting(false);
   }
 
+  //使用模板提问（进行翻译后填充）
+  async function fillWithTemplate(id: number) {
+    setMsg("loading...");
+    setProducing({ id: id, state: true });
+    let question = ``;
+    switch (id) {
+      case 1:
+        question = `What exactly is ${props.text[1]}?`;
+        break;
+      case 2:
+        question = `Please explain the specific relationship between ${
+          props.element ? props.element[1] : exploreStore.noumenon.text[1]
+        } and ${props.text[1]}.`;
+        break;
+      case 3:
+        question = `I want to know more about ${props.text[1]}.`;
+        break;
+    }
+    setMsg(await translate(settingStore.culture, question));
+    setProducing({ id: 0, state: false });
+  }
+
   return (
     <Flex w={"100%"} gap={2} align={"start"}>
       {/* 对于foreign symbol，添加 element 部分 */}
       {props.isForeign && (
-        <Tag flexGrow={1} borderWidth={1} py={2.5}>
+        <Tag
+          flexGrow={1}
+          borderWidth={1}
+          borderColor={"gray.300"}
+          py={2.5}
+          // px={0}
+          bgColor={"gray.50"}
+        >
           <TagLabel>
             <Flex align={"center"}>
-              <Text fontSize="xl" textAlign={"center"} color={"black"}>
+              <Text fontSize="md" textAlign={"center"} color={"black"}>
                 {props.element![0] + " / " + props.element![1]}
               </Text>
             </Flex>
@@ -374,14 +451,59 @@ export default function Metaphor(props: MetaphorProps) {
               <SlideFade in={props.isChatting} style={{ width: "100%" }}>
                 <Flex align={"start"} gap={1} w={"100%"}>
                   <Box w={5} />
-                  <InputGroup flexGrow={1} w={300} margin={"auto"}>
+                  <InputGroup
+                    flexGrow={1}
+                    margin={"auto"}
+                    position={"relative"} //防止menulist被其他symbol的Rhetoric Type和Emotion Type遮挡
+                    zIndex={10}
+                  >
+                    <InputLeftElement>
+                      <Menu closeOnSelect={false}>
+                        <MenuButton
+                          as={IconButton}
+                          aria-label="FAQ"
+                          title="templates"
+                          icon={<HamburgerIcon />}
+                          color={"gray.400"}
+                          size={"xs"}
+                          mt={-1.5}
+                          bgColor={"transparent"}
+                        />
+                        <MenuList fontSize={"xs"}>
+                          {faqs.map((faq) => {
+                            return (
+                              <MenuItem
+                                onClick={() => fillWithTemplate(faq.id)}
+                                key={faq.id}
+                                isDisabled={isProducing.state}
+                                icon={
+                                  isProducing.state &&
+                                  isProducing.id === faq.id ? (
+                                    <Spinner size="xs" speed="1s" />
+                                  ) : (
+                                    <Icon as={ChevronRightIcon} boxSize={4} />
+                                  )
+                                }
+                              >
+                                {faq.content}
+                              </MenuItem>
+                            );
+                          })}
+                        </MenuList>
+                      </Menu>
+                    </InputLeftElement>
                     <Input
                       value={inputMsg}
                       pr={9}
                       size={"sm"}
                       onChange={(e) => setMsg(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
+                        if (
+                          e.key === "Enter" &&
+                          !e.shiftKey &&
+                          inputMsg !== "" &&
+                          !isWaiting
+                        ) {
                           e.preventDefault();
                           handleSend();
                         }

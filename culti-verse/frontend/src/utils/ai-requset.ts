@@ -14,13 +14,45 @@ export async function generateImg(prompt: string): Promise<string> {
 }
 
 export async function chat(
-  context: ChatCompletionMessageParam[]
+  context: ChatCompletionMessageParam[],
+  opt?: boolean
 ): Promise<string> {
   const openai = new OpenAI(apiConfig);
-  const res = await openai.chat.completions.create({
-    model: "gpt-4-turbo-preview",
-    messages: context,
-    n: 1,
-  });
+  let res;
+  if (opt) {
+    res = await openai.chat.completions.create({
+      model: "gpt-4-vision-preview", //只有这个medel能图生文字
+      messages: context,
+      max_tokens: 300,
+    });
+  } else {
+    res = await openai.chat.completions.create({
+      model: "gpt-4-turbo-preview", //只有这个model能成功转译
+      messages: context,
+      n: 1,
+    });
+  }
   return res.choices[0].message.content!;
+}
+
+export async function translate(
+  background: string,
+  text: string
+): Promise<string> {
+  const context = [
+    {
+      role: "system",
+      content:
+        "Now you are a translator, required to translate content as accurately as possible.",
+    },
+    {
+      role: "user",
+      content: `Please translate the following text into the language of ${background}(if the country has more than one language, select the traditional language that is currently spoken by the most local people), and keep the format unchanged: ${text}`,
+    },
+    {
+      role: "user",
+      content: `Note: you should not provide any extra sentences or words other than translation results!`,
+    },
+  ] as ChatCompletionMessageParam[];
+  return chat(context);
 }
