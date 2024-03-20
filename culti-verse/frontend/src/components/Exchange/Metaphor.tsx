@@ -367,7 +367,7 @@ export default function Metaphor(props: MetaphorProps) {
           borderColor={"gray.300"}
           py={2.5}
           // px={0}
-          bgColor={"gray.50"}
+          bgColor={"transparent"}
         >
           <TagLabel>
             <Flex align={"center"}>
@@ -400,9 +400,9 @@ export default function Metaphor(props: MetaphorProps) {
             variant="outline"
             bgColor={
               props.isActive
-                ? "orange.200"
+                ? "gray.200"
                 : props.isSelected
-                ? "orange.100"
+                ? "gray.100"
                 : "transparent"
             }
             justifyContent={"center"}

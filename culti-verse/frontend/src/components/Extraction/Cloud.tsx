@@ -30,7 +30,7 @@ const seriesCfg = {
 
   // Global text style
   textStyle: {
-    fontFamily: "sans-serif",
+    fontFamily: "Times New Roman",
     fontWeight: "bold",
     // Color can be a callback function or a color string
     // 函数式赋值令随机生效
@@ -75,6 +75,7 @@ export default function Cloud(props: {
           // maskImage: maskImage, //遮罩图层
           // Data is an array. Each array item must have name and value property.
           textStyle: {
+            ...seriesCfg.textStyle,
             color: function () {
               return seriesColorMap.get("Animal");
             },
@@ -90,6 +91,7 @@ export default function Cloud(props: {
           // maskImage: maskImage,
           // Data is an array. Each array item must have name and value property.
           textStyle: {
+            ...seriesCfg.textStyle,
             color: function () {
               return seriesColorMap.get("Plant");
             },
@@ -104,6 +106,7 @@ export default function Cloud(props: {
           height: "50%",
           maskImage: maskImage,
           textStyle: {
+            ...seriesCfg.textStyle,
             color: function () {
               return seriesColorMap.get("Fruit");
             },
@@ -119,6 +122,7 @@ export default function Cloud(props: {
           height: "50%",
           maskImage: maskImage,
           textStyle: {
+            ...seriesCfg.textStyle,
             color: function () {
               return seriesColorMap.get("Other");
             },

@@ -65,3 +65,9 @@ body {
 .swiper-pagination-bullets{
     bottom: 0 !important;
 }
+h2, h5, h6{
+    font-family: 'Times New Roman'!important;
+}
+h4{
+    font-family: 'Avenir' !important;
+}

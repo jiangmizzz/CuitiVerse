@@ -20,6 +20,9 @@ export default function NetWork(props: {
             max: 20,
           },
         },
+        font: {
+          face: "Times New Roman",
+        },
       },
       edges: {
         color: {
