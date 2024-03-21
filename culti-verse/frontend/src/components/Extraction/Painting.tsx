@@ -345,7 +345,7 @@ export default function Painting(props: PaintingProps) {
               </Flex>
               <Cropper
                 src={origin + props.src}
-                checkCrossOrigin={false}
+                // checkCrossOrigin={false}
                 style={{ height: "100%", width: "100%" }}
                 // Cropper.js options
                 initialAspectRatio={1}

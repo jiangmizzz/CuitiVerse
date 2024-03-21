@@ -345,9 +345,11 @@ export default function Metaphor(props: MetaphorProps) {
         question = `What exactly is ${props.text[1]}?`;
         break;
       case 2:
-        question = `Please explain the specific relationship between ${
+        question = `Can you please explain the specific relationship between ${
           props.element ? props.element[1] : exploreStore.noumenon.text[1]
-        } and ${props.text[1]}.`;
+        } and ${props.text[1]} in ${
+          props.isForeign ? settingStore.culture : "China"
+        }'s culture?`;
         break;
       case 3:
         question = `I want to know more about ${props.text[1]}.`;
