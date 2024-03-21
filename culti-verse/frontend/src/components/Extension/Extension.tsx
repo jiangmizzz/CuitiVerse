@@ -192,6 +192,7 @@ export default function Extension() {
                   borderWidth={1}
                   colorScheme="black"
                   onClick={() => checkNorm(option)}
+                  fontWeight={"bold"}
                 >
                   {option}
                 </Tag>

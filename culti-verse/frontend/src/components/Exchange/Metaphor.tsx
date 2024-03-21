@@ -268,7 +268,13 @@ export default function Metaphor(props: MetaphorProps) {
         `Please generate a schematic diagram of the image of the main symbol: ${
           props.text[0] + "(" + props.text[1] + ")"
         } ${
-          props.element ? "which relate slightly to " + props.element[1] : ""
+          props.element
+            ? "which relate slightly to " +
+              props.element[0] +
+              "(" +
+              props.element[1] +
+              ")"
+            : ""
         } in the context of ${targetCulture} culture, which can make it easy for me to understand it.`
     );
     const descContext = [
@@ -280,8 +286,10 @@ export default function Metaphor(props: MetaphorProps) {
             text: `Please use ${
               settingStore.culture
             }'s language to summarize the content of this picture (tips on perspective of understanding: ${
-              props.text[1]
-            }, ${props.element ? props.element[1] : ""}).`,
+              props.text[0]
+            }-${props.text[1]}, ${
+              props.element ? props.element[0] + "-" + props.element[1] : ""
+            }).`,
           },
           { type: "image_url", image_url: { url: imgUrl, detail: "auto" } },
         ],
@@ -352,7 +360,9 @@ export default function Metaphor(props: MetaphorProps) {
         }'s culture?`;
         break;
       case 3:
-        question = `I want to know more about ${props.text[1]}.`;
+        question = `I want to know more about ${props.text[1]} in ${
+          props.isForeign ? settingStore.culture : "China"
+        }'s culture.`;
         break;
     }
     setMsg(await translate(settingStore.culture, question));
