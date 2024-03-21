@@ -177,7 +177,11 @@ export default function Exchange() {
               selectedM.text[0] + "(" + selectedM.text[1] + ")"
             } ${
               selectedM.element
-                ? "which relate slightly to " + selectedM.element[1]
+                ? "which relate slightly to " +
+                  selectedM.element[0] +
+                  "(" +
+                  selectedM.element[1] +
+                  ")"
                 : ""
             } in the context of ${targetCulture} culture, which can make it easy for me to understand it.`
         );
@@ -191,8 +195,12 @@ export default function Exchange() {
                 text: `Please use ${
                   settingStore.culture
                 }'s language to summarize the content of this picture (tips on perspective of understanding: ${
-                  selectedM.text[1]
-                }, ${selectedM.element ? selectedM.element[1] : ""}).`,
+                  selectedM.text[0]
+                }-${selectedM.text[1]}, ${
+                  selectedM.element
+                    ? selectedM.element[0] + "-" + selectedM.element[1]
+                    : ""
+                }).`,
               },
               { type: "image_url", image_url: { url: imgUrl, detail: "auto" } },
             ],
@@ -500,7 +508,7 @@ export default function Exchange() {
         </HStack>
       </HStack>
       {/* transform choices */}
-      <HStack mt={2} divider={<StackDivider borderColor="gray.200" />}>
+      <HStack mt={2} divider={<StackDivider borderColor="gray.400" />}>
         <HStack flexGrow={4} justify={"space-between"}>
           {conditions.slice(1).map((c) => {
             return (
@@ -549,7 +557,7 @@ export default function Exchange() {
         mt={2}
         flexGrow={1}
         overflow={"auto"}
-        divider={<StackDivider borderColor="gray.200" />}
+        divider={<StackDivider borderColor="gray.400" />}
       >
         {/* chinese symbols */}
         <VStack {...vstackCfg} flex={4}>
