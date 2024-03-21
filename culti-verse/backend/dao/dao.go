@@ -19,15 +19,27 @@ func GetNoumenonCloud() ([]model.Noumenon, error) {
 }
 
 func GetPicList(nidReq dto.PicListReq) ([]model.Painting, error) {
-	var paintingIDs []string
+	fmt.Println("nidReq.NID:", nidReq.NID)
+	NIDs := strings.Split(nidReq.NID, "+")
+	for _, s := range NIDs {
+		fmt.Printf("%q ", s)
+	}
 	var paintings []model.Painting
 
-	// 首先，根据NID找到所有相关的PID
-	rows, err := db.Table("painting_noumenon_boxes").Select("PID").Where("NID = ?", nidReq.NID).Rows()
+	// 构造基础查询：选择所有包含这些 NID 的行
+	baseQuery := db.Table("painting_noumenon_boxes").Select("PID").Where("NID IN ?", NIDs)
+
+	// 构造子查询：分组并计算每个 PID 的不同 NID 数量
+	subQuery := baseQuery.Group("PID").Having("COUNT(DISTINCT NID) = ?", len(NIDs))
+
+	// 执行查询，获取满足条件的 PID
+	var paintingIDs []string
+	rows, err := subQuery.Rows() // 确保这里是针对已构造的子查询
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+
 	for rows.Next() {
 		var pid string
 		if err := rows.Scan(&pid); err != nil {
@@ -35,13 +47,13 @@ func GetPicList(nidReq dto.PicListReq) ([]model.Painting, error) {
 		}
 		paintingIDs = append(paintingIDs, pid)
 	}
-
+	fmt.Println("paintingIDs:", paintingIDs)
 	// 检查是否有找到相关的PID
 	if len(paintingIDs) == 0 {
 		return []model.Painting{}, nil // 没有找到相关画作
 	}
 
-	// 然后，根据PID列表找到所有相关的画作信息
+	// 根据PID列表找到所有相关的画作信息
 	err = db.Where("PID IN ?", paintingIDs).Find(&paintings).Error
 	if err != nil {
 		return nil, err

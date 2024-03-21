@@ -12,10 +12,10 @@ import (
 
 // GetPaintingListHandler 处理获取画作列表的请求
 func GetPicListHandler(c *gin.Context) {
-
 	nidReq := dto.PicListReq{
 		NID: c.Param("nid"), // 从URL路径中获取nid
 	}
+	fmt.Println(nidReq.NID)
 
 	paintingsModel, err := dao.GetPicList(nidReq)
 	if err != nil {
