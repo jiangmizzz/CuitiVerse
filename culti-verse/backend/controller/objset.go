@@ -26,7 +26,7 @@ func GetObjsetCloudHandler(c *gin.Context) {
 	categorizedCloud := make(map[string][]dto.Data)
 	for _, n := range cloudModel {
 		// 如果名称中包含'&'，则跳过
-		if strings.Contains(n.Name, "&") {
+		if strings.Contains(n.Name, "&") || n.TIMES == 0 {
 			continue
 		}
 		// 初始化特定类型的数据切片
