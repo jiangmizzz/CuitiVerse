@@ -365,7 +365,11 @@ export default function Metaphor(props: MetaphorProps) {
         }'s culture.`;
         break;
     }
-    setMsg(await translate(settingStore.culture, question));
+    if (settingStore.language !== "English") {
+      setMsg(await translate(settingStore.language, question));
+    } else {
+      setMsg(question);
+    }
     setProducing({ id: 0, state: false });
   }
 

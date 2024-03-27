@@ -37,6 +37,7 @@ export interface Settings {
   u1: number;
   u2: number;
   remark: string;
+  language: string;
 }
 
 export interface ExploreTrack {

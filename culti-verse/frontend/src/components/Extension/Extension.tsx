@@ -132,16 +132,18 @@ export default function Extension() {
         tail += `Please help me think of more similar translation paths in Chinese paintings (make it suitable for my understanding).`;
       }
       setProducing(true);
-      const input = await translate(
-        settingStore.culture,
+      let input =
         head +
-          `The following are descriptions of current conditions.
-          \n**Background**: 
-          ${settingStore.generateDesc()}
-          \n**Task**: 
-          ${exploreStore.generateTrack()}
-          ${tail}`
-      );
+        `The following are descriptions of current conditions.
+      \n**Background**: 
+      ${settingStore.generateDesc()}
+      \n**Task**: 
+      ${exploreStore.generateTrack()}
+      ${tail}`;
+      //system语言非英语时需要翻译
+      if (settingStore.language !== "English") {
+        input = await translate(settingStore.language, input);
+      }
       setProducing(false);
       setMsg(input);
     } else {

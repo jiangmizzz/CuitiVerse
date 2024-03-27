@@ -13,19 +13,20 @@ const seriesCfg = {
   keepAspect: false, //图像比例
 
   // Text size range
-  sizeRange: [7, 16],
+  sizeRange: [7, 18],
 
   //文字旋转角, range [-90, 90] by rotationStep 45
   rotationRange: [0, 0],
   rotationStep: 0,
   //词间隔大小
-  gridSize: 5,
+  gridSize: 4,
   right: null,
   bottom: null,
 
   drawOutOfBound: false,
   // If perform layout animation.
   // NOTE disable it will lead to UI blocking when there is lots of words.
+  shrinkTofit: true,
   layoutAnimation: true,
 
   // Global text style
@@ -68,67 +69,30 @@ export default function Cloud(props: {
         {
           ...seriesCfg,
           //图像在画布中的位置
-          left: "0",
-          top: "0",
-          width: "80%",
-          height: "60%",
+          left: "2.5%",
+          top: "5%",
+          width: "95%",
+          height: "90%",
           // maskImage: maskImage, //遮罩图层
           // Data is an array. Each array item must have name and value property.
           textStyle: {
             ...seriesCfg.textStyle,
-            color: function () {
-              return seriesColorMap.get("Animal");
-            },
+            // color: function () {
+            //   return seriesColorMap.get("Animal");
+            // },
           },
-          data: props.data.filter((d) => d.type === "Animal")[0].data,
-        },
-        {
-          ...seriesCfg,
-          left: "70",
-          top: "100",
-          width: "80%",
-          height: "50%",
-          // maskImage: maskImage,
-          // Data is an array. Each array item must have name and value property.
-          textStyle: {
-            ...seriesCfg.textStyle,
-            color: function () {
-              return seriesColorMap.get("Plant");
-            },
-          },
-          data: props.data.filter((d) => d.type === "Plant")[0].data,
-        },
-        {
-          ...seriesCfg,
-          left: "0",
-          top: "90",
-          width: "40%",
-          height: "50%",
-          maskImage: maskImage,
-          textStyle: {
-            ...seriesCfg.textStyle,
-            color: function () {
-              return seriesColorMap.get("Fruit");
-            },
-          },
-          // Data is an array. Each array item must have name and value property.
-          data: props.data.filter((d) => d.type === "Fruit")[0].data,
-        },
-        {
-          ...seriesCfg,
-          left: "120",
-          top: "0",
-          width: "70%",
-          height: "50%",
-          maskImage: maskImage,
-          textStyle: {
-            ...seriesCfg.textStyle,
-            color: function () {
-              return seriesColorMap.get("Other");
-            },
-          },
-          // Data is an array. Each array item must have name and value property.
-          data: props.data.filter((d) => d.type === "Other")[0].data,
+          data: props.data
+            .map((serie) => {
+              return [
+                ...serie.data.map((data) => {
+                  return {
+                    ...data,
+                    textStyle: { color: seriesColorMap.get(serie.type)! },
+                  };
+                }),
+              ];
+            })
+            .flat(),
         },
       ],
     };
@@ -150,8 +114,7 @@ export default function Cloud(props: {
         myChart.dispose();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [props]);
 
   return <Box id={"wordcloud"} w={250} h={200} />;
 }

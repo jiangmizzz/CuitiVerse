@@ -39,6 +39,7 @@ import { useToast } from "@chakra-ui/react";
 import { useState } from "react";
 import { Settings, eduType } from "../../vite-env";
 import { useSettingStore } from "../../stores/setting";
+import { SettingsIcon } from "@chakra-ui/icons";
 
 const eduOption: eduType[] = [
   "elementary",
@@ -94,7 +95,7 @@ export default function Setting() {
             opacity={0.7}
           >
             <div style={{ width: "15em", textAlign: "start" }}>
-              {"| Backround Setting"}
+              {"| Target Culture Setting"}
             </div>
           </Button>
         </PopoverTrigger>
@@ -103,7 +104,7 @@ export default function Setting() {
           <PopoverArrow />
           <PopoverBody>
             <Stack spacing={2} fontFamily={"Times New Roman"}>
-              <FormControl>
+              <FormControl isRequired>
                 <FormLabel fontWeight={"bold"}>{"Culture"}</FormLabel>
                 <Input
                   size={"sm"}
@@ -212,11 +213,27 @@ export default function Setting() {
                 <Textarea
                   size={"sm"}
                   placeholder="Your special cultural background"
-                  mb={3}
                   value={formValue.remark}
                   onChange={(e) =>
                     setFormValue({ ...formValue, remark: e.target.value })
                   }
+                />
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel fontWeight={"bold"} display={"flex"}>
+                  <HStack spacing={1}>
+                    <SettingsIcon opacity={0.5} />
+                    <Text>{"System Language"}</Text>
+                  </HStack>
+                </FormLabel>
+                <Input
+                  mb={3}
+                  size={"sm"}
+                  placeholder="The language used to display information"
+                  value={formValue.language}
+                  onChange={(e) => {
+                    setFormValue({ ...formValue, language: e.target.value });
+                  }}
                 />
               </FormControl>
             </Stack>
@@ -234,7 +251,11 @@ export default function Setting() {
             </Button>
             <Button
               colorScheme="teal"
-              isDisabled={formValue.culture == "" || formValue.age == 0}
+              isDisabled={
+                formValue.culture === "" ||
+                formValue.age === 0 ||
+                formValue.language === ""
+              }
               onClick={() => {
                 settingStore.updateInfo(formValue);
                 toast({

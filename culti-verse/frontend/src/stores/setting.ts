@@ -15,6 +15,7 @@ interface SettingState extends Settings {
 
 export const useSettingStore = create<SettingState>()((set, get) => ({
   culture: "United States",
+  language: "English",
   age: 20,
   edu: "bachelor's degree",
   u1: 3,
@@ -24,6 +25,7 @@ export const useSettingStore = create<SettingState>()((set, get) => ({
     set(() => {
       return {
         culture: newValue.culture,
+        language: newValue.language,
         age: newValue.age,
         edu: newValue.edu,
         u1: newValue.u1,
@@ -36,6 +38,7 @@ export const useSettingStore = create<SettingState>()((set, get) => ({
     set(() => {
       return {
         culture: "United States",
+        language: "English",
         age: 20,
         edu: "bachelor's degree",
         u1: 3,
