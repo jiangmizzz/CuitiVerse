@@ -258,6 +258,7 @@ export default function Painting(props: PaintingProps) {
         size={"xl"}
         isOpen={openCropper}
         onClose={() => setCropper(false)}
+        closeOnOverlayClick={false}
         isCentered
       >
         <ModalOverlay />

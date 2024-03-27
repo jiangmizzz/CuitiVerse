@@ -34,7 +34,7 @@ function BoxHeader(props: { title: string; position: "l" | "m" | "r" }) {
     >
       <Heading
         as="h4"
-        size="md"
+        size={props.position === "r" ? "sm" : "md"}
         whiteSpace={"nowrap"}
         color={props.position === "m" ? "black" : "white"}
       >
@@ -62,7 +62,7 @@ function App() {
         </div>
         <Flex m={"0.5em"} flexGrow={1} gap={2} minH={0}>
           <Flex direction={"column"} {...boxCfg}>
-            <BoxHeader title="Culture Source Analyze" position="l" />
+            <BoxHeader title="Source Culture Extraction" position="l" />
             <Extraction />
           </Flex>
           <Flex
@@ -72,11 +72,11 @@ function App() {
             direction={"column"}
             {...boxCfg}
           >
-            <BoxHeader title="Culture Adapt" position="m" />
+            <BoxHeader title="Culture Exchange" position="m" />
             <Exchange />
           </Flex>
           <Flex direction={"column"} {...boxCfg}>
-            <BoxHeader title="Culture Assimilate" position="r" />
+            <BoxHeader title="Target Culture Extrapolate" position="r" />
             <Extension />
           </Flex>
         </Flex>

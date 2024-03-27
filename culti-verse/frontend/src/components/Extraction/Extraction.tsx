@@ -16,6 +16,7 @@ import {
   Spinner,
   Badge,
   Divider,
+  Button,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import Cloud from "./Cloud";
@@ -70,6 +71,7 @@ const picData1: PaintingType = {
 export default function Extraction() {
   const exploreStore = useExploreStore();
   const conditionsStore = useConditionsStore();
+  const [cloudType, setCloudType] = useState<seriesType>("Animal");
   const [obj, setObj] = useState<string>(""); // 词云图中选中的物像id
   const [nid, setNid] = useState<string>(""); //网络图中选中的物像/组合
   const [isList, setIsList] = useState<boolean>(true); //画作列表态
@@ -125,9 +127,9 @@ export default function Extraction() {
     setMutating(true);
     setTimeout(() => {
       setMutating(false);
-    }, 300);
-    // setNoumenons([]);
-    // setCombinations([]);
+    }, 500);
+    setNoumenons([]);
+    setCombinations([]);
   }, [pid]);
 
   //数据更新时获取新的物像列表和物像组合列表
@@ -243,22 +245,43 @@ export default function Extraction() {
               </Center>
             ) : (
               <Flex direction={"column"} justify={"space-between"}>
-                <HStack flexGrow={1} align={"center"} pl={2}>
+                <HStack
+                  flexGrow={1}
+                  align={"center"}
+                  pt={1}
+                  // pl={2}
+                  px={1}
+                  justify={"space-around"}
+                >
                   {series.map((s) => {
                     return (
-                      <Flex align={"center"} gap={0.4} key={s}>
-                        <Image
-                          w={4}
-                          objectFit={"cover"}
-                          src={seriesIcon.get(s)}
-                        />
-                        <Text fontSize="xs">{s}</Text>
-                      </Flex>
+                      <Button
+                        variant={"outline"}
+                        key={s}
+                        size={"sm"}
+                        px={0.5}
+                        h={"2em"}
+                        bgColor={cloudType === s ? "gray.100" : "transparent"}
+                        onClick={() => setCloudType(s)}
+                      >
+                        <Flex align={"center"} gap={0.2}>
+                          <Image
+                            w={4}
+                            objectFit={"cover"}
+                            src={seriesIcon.get(s)}
+                          />
+                          <Text fontSize="xs">{s}</Text>
+                        </Flex>
+                      </Button>
                     );
                   })}
                 </HStack>
                 <Cloud
-                  data={cloudData ? cloudData : []}
+                  data={
+                    cloudData
+                      ? cloudData.filter((data) => data.type === cloudType)
+                      : []
+                  }
                   select={(selected) => setObj(selected)}
                 />
               </Flex>
@@ -282,7 +305,7 @@ export default function Extraction() {
         <Box flexGrow={1} w={"100%"} bgColor={"gray.100"} overflow={"auto"}>
           {isList ? (
             picListLoading ? (
-              <Center>
+              <Center h={"100%"}>
                 <Spinner
                   speed="0.8s"
                   color="gray.300"

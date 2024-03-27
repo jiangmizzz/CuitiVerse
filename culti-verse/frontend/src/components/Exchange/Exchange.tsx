@@ -193,8 +193,8 @@ export default function Exchange() {
               {
                 type: "text",
                 text: `Please use ${
-                  settingStore.culture
-                }'s language to summarize the content of this picture (tips on perspective of understanding: ${
+                  settingStore.language
+                } to summarize the content of this picture (tips on perspective of understanding: ${
                   selectedM.text[0]
                 }-${selectedM.text[1]}, ${
                   selectedM.element
@@ -291,8 +291,8 @@ export default function Exchange() {
             switch (k) {
               case "element": {
                 conditions += `Condition${index + 1}: ${k} is ${
-                  exploreStore.noumenon.text
-                }.\n`;
+                  exploreStore.noumenon.text[0]
+                }(${exploreStore.noumenon.text[1]}).\n`;
                 break;
               }
               case "symbol": {
@@ -371,11 +371,11 @@ export default function Exchange() {
               And please meet the following format: \n
               <code>
               norms: {
-                element: string[2]; //element[0] is in ${settingStore.culture}'s language , element[1] is in English
-                symbol: string[2]; //symbol[0] is in ${settingStore.culture}'s language, symbol[1] is in English
+                element: string[2]; //element[0] is in ${settingStore.language} , element[1] is in English
+                symbol: string[2]; //symbol[0] is in ${settingStore.language}, symbol[1] is in English
                 emotion: "Positive" | "Neutral" | "Negative";
                 rhetoric: "Iconic"| "Homophony"| "Homophonic pun"| "Synonym" | "Homograph" | "Satire";
-                custom: string[2]; //custom[0] is in ${settingStore.culture}'s language, symbol[1] is in English
+                custom: string[2]; //custom[0] is in ${settingStore.language}, symbol[1] is in English
               }[]
               </code>\n
               (Here are the definitions of the options of rehtoric, which help you to select a suitable one among them: 
@@ -483,9 +483,10 @@ export default function Exchange() {
         <HStack spacing={0.5} divider={<StackDivider borderColor="gray.200" />}>
           {opts.map((opt) => {
             return (
-              <Tooltip label={opt.op} key={opt.key}>
+              <Tooltip label={opt.op} key={opt.key} placement="top">
                 <IconButton
-                  bgColor={"transparent"}
+                  // bgColor={"transparent"}
+                  shadow={"base"}
                   rounded={"full"}
                   size={"sm"}
                   aria-label={opt.key}
