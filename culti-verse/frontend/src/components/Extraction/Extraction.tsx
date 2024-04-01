@@ -136,9 +136,13 @@ export default function Extraction() {
   useEffect(() => {
     if (picData !== undefined) {
       setMutating(true);
+      // setMutating(true);
       setNoumenons(picData.noumenons);
       setCombinations(picData.combinations);
-      setMutating(false);
+      // setMutating(false);
+      setTimeout(() => {
+        setMutating(false);
+      }, 500);
     }
   }, [picData]);
 

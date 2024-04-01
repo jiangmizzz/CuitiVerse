@@ -284,7 +284,7 @@ export default function Metaphor(props: MetaphorProps) {
           {
             type: "text",
             text: `Please use ${
-              settingStore.culture
+              settingStore.language
             }'s language to summarize the content of this picture (tips on perspective of understanding: ${
               props.text[0]
             }-${props.text[1]}, ${

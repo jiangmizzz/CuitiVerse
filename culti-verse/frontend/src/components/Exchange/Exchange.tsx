@@ -445,7 +445,7 @@ export default function Exchange() {
       {/* view title */}
       <Flex w={"100%"} mb={1}>
         <Heading as="h5" size="sm" flexGrow={4} textAlign={"center"}>
-          {"Culture Source Explore"}
+          {"Source Culture Explore"}
         </Heading>
         <Heading as="h5" size="sm" flexGrow={5} textAlign={"center"}>
           {"Culture Transfer"}
@@ -497,7 +497,7 @@ export default function Exchange() {
                     />
                   }
                   isDisabled={
-                    isTransforming ||
+                    (opt.key === "trans" && isTransforming) ||
                     selectedM.mid === "" ||
                     (opt.key === "trans" && selectedM.isForeign === true)
                   }
