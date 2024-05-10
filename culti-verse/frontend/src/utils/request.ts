@@ -1,7 +1,7 @@
 import { ResponseType } from "../vite-env";
 
-export const origin = "http://pic_server_address"; //address of your paintings
-const back = "http://localhost:8080"; //your backend address
+export const origin = "http://10.76.0.167:8002";
+const back = "http://10.192.10.157:8080";
 const prefix = back + "/api";
 export async function getFetcher<T>(key: string) {
   const resp = (await fetch(prefix + key, {

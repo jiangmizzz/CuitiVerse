@@ -38,7 +38,8 @@ import { getFetcher, origin } from "../../utils/request";
 import { normColorMap, seriesIcon } from "../../stores/maps";
 import Choice from "../Exchange/Choice";
 import { useConditionsStore } from "../../stores/conditions";
-import { translate } from "../../utils/ai-requset";
+// import { translate } from "../../utils/ai-requset";
+import { useAiStore } from "../../stores/aiconfig";
 
 //值得记录的写法+1
 type SimplePic = Pick<
@@ -71,6 +72,7 @@ const picData1: PaintingType = {
 export default function Extraction() {
   const exploreStore = useExploreStore();
   const conditionsStore = useConditionsStore();
+  const aiStore = useAiStore();
   const [cloudType, setCloudType] = useState<seriesType>("Animal");
   const [obj, setObj] = useState<string>(""); // 词云图中选中的物像id
   const [nid, setNid] = useState<string>(""); //网络图中选中的物像/组合
@@ -155,7 +157,7 @@ export default function Extraction() {
   }
   //新添加一个物像
   async function addElement(text: string, position: number[]): Promise<void> {
-    const usText = await translate("United States", text); //转译成英文
+    const usText = await aiStore.translate("United States", text); //转译成英文
     const nList: string = noumenons.map((n) => n.nid).toString() + "," + usText;
     const res = await getFetcher<AddElementRes>("/pic/add/" + nList);
 
@@ -185,7 +187,7 @@ export default function Extraction() {
       );
     } else if (res.newNoumenon.nid === "") {
       //2. 物像不在库中
-      const zhText = await translate("China", usText);
+      const zhText = await aiStore.translate("China", usText);
       setNoumenons([
         ...noumenons,
         {

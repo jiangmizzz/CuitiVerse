@@ -31,7 +31,7 @@ import { useEffect, useState } from "react";
 import Metaphor from "./Metaphor";
 import { useExploreStore } from "../../stores/explore";
 import { useExchangeStore } from "../../stores/exchange";
-import { chat, generateImg } from "../../utils/ai-requset";
+// import { chat, generateImg } from "../../utils/ai-requset";
 import { getFetcher } from "../../utils/request";
 import { useSettingStore } from "../../stores/setting";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
@@ -43,6 +43,7 @@ import { useTransformStore } from "../../stores/transform";
 import { CloseIcon } from "@chakra-ui/icons";
 import keepIcon from "../../assets/select.svg";
 import requireIcon from "../../assets/question.svg";
+import { useAiStore } from "../../stores/aiconfig";
 
 const vstackCfg = {
   h: "100%",
@@ -98,6 +99,7 @@ export default function Exchange() {
   const settingStore = useSettingStore();
   const conditionsStore = useConditionsStore();
   const tranformStore = useTransformStore();
+  const aiStore = useAiStore();
   const toast = useToast();
   // 选中的喻体
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -171,7 +173,7 @@ export default function Exchange() {
         const targetCulture = selectedM.isForeign
           ? settingStore.culture
           : "China";
-        const imgUrl = await generateImg(
+        const imgUrl = await aiStore.generateImg(
           settingStore.generateDesc() +
             `Please generate a schematic diagram of the image of the main symbol: ${
               selectedM.text[0] + "(" + selectedM.text[1] + ")"
@@ -206,7 +208,7 @@ export default function Exchange() {
             ],
           },
         ] as ChatCompletionMessageParam[];
-        const desc = await chat(descContext, true);
+        const desc = await aiStore.chat(descContext, true);
         exchangeStore.deleteItem(mid, loadingId);
         exchangeStore.addItem(mid, {
           opt: "gen_img",
@@ -395,7 +397,7 @@ export default function Exchange() {
                 "Note: do not include any other redundant sentences or words in your answer, only json format (even without ```json``` or ```typescript```)!",
             },
           ] as ChatCompletionMessageParam[];
-          const answer = await chat(context);
+          const answer = await aiStore.chat(context);
           // console.log(answer);
           const normTable: { norms: Norm[] } = JSON.parse(answer);
           //3. 更新fsMap
