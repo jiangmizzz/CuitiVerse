@@ -147,6 +147,7 @@ function App() {
                   variant="solid"
                   colorScheme="teal"
                   rightIcon={<ArrowForwardIcon />}
+                  isDisabled={configValue.apiKey === ""}
                   onClick={() =>
                     aiStore.setConfig(
                       configValue.apiKey,
