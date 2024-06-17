@@ -38,10 +38,11 @@ import { useExchangeStore } from "../../stores/exchange";
 import { useEffect, useState } from "react";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import ImgPreviewer from "../ImgPreviewer/ImgPreviewer";
-import { chat, generateImg, translate } from "../../utils/ai-requset";
+// import { chat, generateImg, translate } from "../../utils/ai-requset";
 import { useSettingStore } from "../../stores/setting";
 import { ChevronRightIcon, HamburgerIcon } from "@chakra-ui/icons";
 import { useExploreStore } from "../../stores/explore";
+import { useAiStore } from "../../stores/aiconfig";
 
 const textCfg = {
   fontSize: "xs",
@@ -236,6 +237,7 @@ export default function Metaphor(props: MetaphorProps) {
   const exchangeStore = useExchangeStore();
   const settingStore = useSettingStore();
   const exploreStore = useExploreStore();
+  const aiStore = useAiStore();
   const [inputMsg, setMsg] = useState<string>("");
   const [isWaiting, setWaiting] = useState<boolean>(false);
   const [isProducing, setProducing] = useState<{ id: number; state: boolean }>({
@@ -263,7 +265,7 @@ export default function Metaphor(props: MetaphorProps) {
       isLoading: true,
     });
     const targetCulture = props.isForeign ? settingStore.culture : "China";
-    const imgUrl = await generateImg(
+    const imgUrl = await aiStore.generateImg(
       settingStore.generateDesc() +
         `Please generate a schematic diagram of the image of the main symbol: ${
           props.text[0] + "(" + props.text[1] + ")"
@@ -295,7 +297,7 @@ export default function Metaphor(props: MetaphorProps) {
         ],
       },
     ] as ChatCompletionMessageParam[];
-    const desc = await chat(descContext, true);
+    const desc = await aiStore.chat(descContext, true);
     exchangeStore.replaceImg(props.mid, id, {
       opt: "gen_img",
       content: [imgUrl, desc],
@@ -334,7 +336,7 @@ export default function Metaphor(props: MetaphorProps) {
         content: inputMsg,
       },
     ] as ChatCompletionMessageParam[];
-    const answer = await chat(messages);
+    const answer = await aiStore.chat(messages);
     exchangeStore.deleteItem(props.mid, loadingId);
     exchangeStore.addItem(props.mid, {
       opt: "chat",
@@ -366,7 +368,7 @@ export default function Metaphor(props: MetaphorProps) {
         break;
     }
     if (settingStore.language !== "English") {
-      setMsg(await translate(settingStore.language, question));
+      setMsg(await aiStore.translate(settingStore.language, question));
     } else {
       setMsg(question);
     }

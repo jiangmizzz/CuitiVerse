@@ -18,11 +18,13 @@ import Message from "./Message";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { useExploreStore } from "../../stores/explore";
 import { useSettingStore } from "../../stores/setting";
-import { chat, translate } from "../../utils/ai-requset";
+// import { chat, translate } from "../../utils/ai-requset";
+import { useAiStore } from "../../stores/aiconfig";
 
 export default function Extension() {
   const exploreStore = useExploreStore();
   const settingStore = useSettingStore();
+  const aiStore = useAiStore();
   const toast = useToast();
   const [inputMsg, setMsg] = useState<string>("");
   const [isWaiting, setWaiting] = useState<boolean>(false);
@@ -83,7 +85,7 @@ export default function Extension() {
           content: inputMsg,
         },
       ] as ChatCompletionMessageParam[];
-      const answer = await chat(context);
+      const answer = await aiStore.chat(context);
       setMsgList((prev) => {
         return {
           counter: prev.counter + 1,
@@ -141,7 +143,7 @@ export default function Extension() {
       ${exploreStore.generateTrack()}${tail}`;
       //system语言非英语时需要翻译
       if (settingStore.language !== "English") {
-        input = await translate(settingStore.language, input);
+        input = await aiStore.translate(settingStore.language, input);
       }
       setProducing(false);
       setMsg(input);

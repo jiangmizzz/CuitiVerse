@@ -1,5 +1,4 @@
 import { ResponseType } from "../vite-env";
-
 export const origin = "http://pic_server_address"; //address of your paintings
 const back = "http://localhost:8080"; //your backend address
 const prefix = back + "/api";
